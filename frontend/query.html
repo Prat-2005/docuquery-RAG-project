@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>DocuQuery | Ask</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+		<link rel="stylesheet" href="style.css" />
+		<script src="script.js" defer></script>
+	</head>
+	<body data-page="query">
+		<main class="app-shell">
+			<header class="topbar">
+				<a class="brand" href="index.html" aria-label="DocuQuery home">
+					<span class="brand-mark">D</span>
+					<span>DocuQuery</span>
+				</a>
+				<span class="connection-status"><span class="status-dot"></span> Local workspace</span>
+			</header>
+
+			<section class="chat-workspace" aria-label="Document chat">
+				<div class="conversation-panel">
+					<div class="chat-heading">
+						<p class="eyebrow">Interactive Workspace</p>
+						<h1>Chat with your file.<br /><em>Get instant insights.</em></h1>
+						<div class="document-pill"><span class="file-type" id="file-type">TXT</span><span class="document-name"><strong id="file-name">Uploaded document</strong><small id="file-meta">Ready for questions</small></span><a href="upload.html" aria-label="Choose another document">↗</a></div>
+					</div>
+
+					<div class="answer-area" aria-live="polite">
+						<div class="answer-header">
+							<div><p class="label">03 / Answer</p><h2>Response</h2></div>
+						</div>
+						<div class="answer-card" id="answer-card">
+							<div class="chat-thread" id="chat-thread">
+							<div class="empty-state" id="empty-state">
+								<span class="empty-mark">↗</span>
+								<p>Your answer will appear here.</p>
+								<small>Ask a focused question about the uploaded source.</small>
+							</div>
+							<div class="loading-state is-hidden" id="loading-state"><span class="loader"></span></div>
+							<div class="answer-content chat-bubble assistant-bubble is-hidden" id="answer-content"></div>
+							<div class="message-actions is-hidden" id="answer-actions">
+								<button class="message-action" id="copy-answer" type="button">▣ <span>Copy</span></button>
+								<button class="message-action" id="regenerate-button" type="button">↻ <span>Regenerate</span></button>
+							</div>
+							</div>
+						</div>
+					</div>
+
+					<form class="question-form" id="question-form">
+						<label class="sr-only" for="question">Your question</label>
+						<textarea id="question" rows="3" placeholder="Ask something about your document..."></textarea>
+						<div class="question-actions">
+							<span class="enter-hint">Press Enter to ask <span>Shift + Enter for a new line</span></span>
+							<div class="question-buttons">
+								<button class="stop-button is-hidden" id="stop-button" type="button">Stop</button>
+								<button class="ask-button" id="ask-button" type="submit"><span>Send</span><span>↗</span></button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</section>
+		</main>
+		<div class="status-overlay is-hidden" id="status-overlay" role="presentation">
+			<div class="status-dialog" id="status-dialog" role="alertdialog" aria-modal="true" aria-labelledby="status-title">
+				<span class="status-symbol" id="status-symbol"></span>
+				<h2 id="status-title">Status</h2>
+				<p id="status-message"></p>
+				<button class="status-close" id="status-close" type="button">Close</button>
+			</div>
+		</div>
+	</body>
+</html>

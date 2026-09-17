@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>DocuQuery | Document Intelligence</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+		<link rel="stylesheet" href="style.css" />
+		<script src="script.js" defer></script>
+	</head>
+	<body data-page="home">
+		<main class="app-shell home-screen">
+			<header class="topbar">
+				<a class="brand" href="index.html" aria-label="DocuQuery home">
+					<span class="brand-mark">D</span>
+					<span>DocuQuery</span>
+				</a>
+				<span class="connection-status"><span class="status-dot"></span> Local workspace</span>
+			</header>
+
+			<section class="hero" id="top">
+				<p class="eyebrow">Document Intelligence</p>
+				<h1>Your documents,<br /><em>answered.</em></h1>
+				<p class="hero-copy">Upload any PDF, DOCX or TXT file and ask questions in plain language. DocuQuery uses AI-powered retrieval to find the most relevant passages and generate precise, context-aware answers.</p>
+				<a class="get-started-button" href="upload.html">Get Started <span>→</span></a>
+			</section>
+
+			<section class="features" aria-label="Features">
+				<div class="features-grid">
+					<div class="feature-card">
+						<span class="feature-icon">↑</span>
+						<h3>Smart Upload</h3>
+						<p>Drop your document and DocuQuery automatically indexes every passage for lightning-fast retrieval.</p>
+					</div>
+					<div class="feature-card">
+						<span class="feature-icon">⚡</span>
+						<h3>AI-Powered Answers</h3>
+						<p>Ask any question in natural language. Our AI reads the relevant sections and crafts a clear, accurate response.</p>
+					</div>
+					<div class="feature-card">
+						<span class="feature-icon">↻</span>
+						<h3>Iterative Refinement</h3>
+						<p>Not satisfied? Regenerate answers, refine your questions, and explore your document from every angle.</p>
+					</div>
+				</div>
+			</section>
+
+			<section class="about-section" style="width: 100%; padding: clamp(40px, 6vh, 80px) 28px; background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+				<div style="max-width: 100%; margin: 0 auto;">
+					<h2 style="margin-bottom: 16px;">How it Works</h2>
+					<p style="color: var(--muted); line-height: 1.7; margin-bottom: 24px;">DocuQuery uses a local RAG (Retrieval-Augmented Generation) pipeline to read your documents. When you upload a file, it is chunked and indexed on your machine. When you ask a question, the most relevant passages are retrieved and used as context to generate a highly accurate answer.</p>
+					<h2 style="margin-bottom: 16px;">Privacy First</h2>
+					<p style="color: var(--muted); line-height: 1.7; margin-bottom: 24px;">Your data never leaves your device unless configured otherwise. The entire indexing and retrieval process is handled locally, ensuring that your sensitive documents remain completely private and secure.</p>
+					<h2 style="margin-bottom: 16px;">Common Use Cases</h2>
+					<ul style="color: var(--muted); line-height: 1.7; margin-bottom: 0; padding-left: 20px;">
+						<li style="margin-bottom: 8px;"><strong>Research Papers:</strong> Quickly extract methodologies, results, and specific data points without skimming pages of text.</li>
+						<li style="margin-bottom: 8px;"><strong>Legal Contracts:</strong> Ask about specific clauses, obligations, and timelines to review agreements faster.</li>
+						<li style="margin-bottom: 8px;"><strong>Technical Manuals:</strong> Find exact troubleshooting steps or configuration parameters instantly.</li>
+						<li><strong>Financial Reports:</strong> Pull out key metrics, revenue figures, and executive summaries from lengthy PDFs.</li>
+					</ul>
+				</div>
+			</section>
+
+			<section class="cta-section">
+				<h2>Ready to explore your documents?</h2>
+				<p class="cta-copy">Start by uploading a document. It only takes a few seconds.</p>
+				<a class="get-started-button" href="upload.html">Get Started <span>→</span></a>
+			</section>
+		</main>
+		<div class="status-overlay is-hidden" id="status-overlay" role="presentation">
+			<div class="status-dialog" id="status-dialog" role="alertdialog" aria-modal="true" aria-labelledby="status-title">
+				<span class="status-symbol" id="status-symbol"></span>
+				<h2 id="status-title">Status</h2>
+				<p id="status-message"></p>
+				<button class="status-close" id="status-close" type="button">Close</button>
+			</div>
+		</div>
+	</body>
+</html>

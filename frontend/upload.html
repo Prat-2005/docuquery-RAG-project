@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>DocuQuery | Ask</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+		<link rel="stylesheet" href="style.css" />
+		<script src="script.js" defer></script>
+	</head>
+	<body data-page="upload">
+		<main class="app-shell upload-screen">
+			<header class="topbar">
+				<a class="brand" href="index.html" aria-label="DocuQuery home">
+					<span class="brand-mark">D</span>
+					<span>DocuQuery</span>
+				</a>
+				<span class="connection-status"><span class="status-dot"></span> Local workspace</span>
+			</header>
+
+			<section class="upload-intro" id="top">
+				<p class="eyebrow">Ask your documents</p>
+				<h1>Find the useful bit.<br /><em>Skip the digging.</em></h1>
+				<p class="intro-copy">Upload a document and ask a plain-language question. DocuQuery searches the source, then builds an answer from the relevant passages.</p>
+			</section>
+
+			<section class="upload-panel" aria-label="Upload a document">
+				<div class="section-heading">
+					<div>
+						<p class="label">Document upload</p>
+						<h2>Choose your source</h2>
+					</div>
+					<span class="step-number">01</span>
+				</div>
+
+				<label class="upload-zone" for="document-input">
+					<span class="upload-icon">↑</span>
+					<strong>Drop a file here</strong>
+					<span>or click to browse</span>
+					<small>PDF, DOCX or TXT</small>
+					<input id="document-input" type="file" accept=".pdf,.docx,.txt" />
+				</label>
+
+				<div class="file-card is-hidden" id="file-card">
+					<span class="file-type" id="file-type">TXT</span>
+					<div class="file-details">
+						<strong id="file-name">No document selected</strong>
+						<span id="file-meta">Ready to upload</span>
+					</div>
+					<button class="icon-button" id="remove-file" type="button" aria-label="Remove document">×</button>
+				</div>
+				<p class="helper-text" id="upload-status">Your document will upload automatically after selection.</p>
+
+				<section class="file-summary is-hidden" id="file-summary" aria-live="polite">
+					<div class="summary-header">
+						<p class="label">File summary</p>
+					</div>
+					<p class="file-summary-text" id="file-summary-text">The content summary will appear here after indexing.</p>
+					<a class="continue-button is-hidden" id="continue-button" href="query.html">Continue to questions <span>↗</span></a>
+				</section>
+			</section>
+		</main>
+		<div class="status-overlay is-hidden" id="status-overlay" role="presentation">
+			<div class="status-dialog" id="status-dialog" role="alertdialog" aria-modal="true" aria-labelledby="status-title">
+				<span class="status-symbol" id="status-symbol"></span>
+				<h2 id="status-title">Status</h2>
+				<p id="status-message"></p>
+				<button class="status-close" id="status-close" type="button">Close</button>
+			</div>
+		</div>
+	</body>
+</html>
