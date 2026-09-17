@@ -68,10 +68,10 @@ DocuQuery is an AI-powered document question-answering application. Upload a PDF
 For local Ollama, the default values are usually:
 
 ```env
-LLM_PROVIDER=ollama
-LLM_URL=http://localhost:11434/v1
-LLM_MODEL=mycoder:latest
-LLM_API_KEY=ollama
+LLM_PROVIDER=YOUR_LLM_PROVIDER
+LLM_URL=YOUR_LLM_PROVIDER_URL
+LLM_MODEL=YOUR_LLM_MODEL
+LLM_API_KEY=YOUR_LLM_API_KEY
 ```
 
 ## API Endpoints
