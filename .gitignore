@@ -26,3 +26,17 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Logs and local database files
+*.log
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.sql
+
+# Private keys and secret folders
+*.pem
+*.key
+*.p12
+secrets/

@@ -3,6 +3,12 @@ uvicorn[standard]
 python-multipart
 pydantic
 python-dotenv
+
+sqlalchemy
+alembic
+psycopg[binary]
+pgvector
+
 openai
 PyMuPDF
 python-docx

@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from backend.retrieval import DocumentRetriever, RetrieverError
 from backend.generation import GenerativeGPT
+from backend.db.database import test_db_connection
 
 app = FastAPI(
     title="DocuQuery - AI-Assited Document Reader",
@@ -29,6 +30,11 @@ def health_check():
 @app.get("/")
 def frontend_home():
     return FileResponse("frontend/index.html")
+
+@app.get("/db-test")
+def db_test():
+    result = test_db_connection()
+    return result
 
 @app.post("/upload")
 async def get_document(file: UploadFile = File(...)):

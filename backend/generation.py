@@ -64,34 +64,17 @@ class GenerativeGPT:
         self.answer = response.choices[0].message.content
         return self.answer
 
-    def summarize_document(
-            self,
-            content: str,
-            batch_size: int = 8000,
-    ) -> str:
-        summaries = []
-        for index in range(0, len(content), batch_size):
-            summaries.append(
-                self.generate(
-                    context=content[index:index + batch_size],
-                    question=(
-                        "Summarize this document section in 2-3 concise sentences. "
-                        "Keep important facts, topics, names, dates, and conclusions."
-                    ),
-                )
-            )
+    def summarize_document(self, content: str) -> str:
+        max_characters = 25000
+        sampled_content = content[:max_characters + 1]
 
-        combined_summary = "\n\n".join(summaries)
-
-        final_summary = self.generate(
-            context=combined_summary,
+        return self.generate(
+            context=sampled_content,
             question=(
-                "Create a final 5-10 sentence summary of the complete document. "
-                "Focus on its subject, purpose, and most important information."
+                "Provide a concise summary of this document. "
+                "Mention its subject, purpose, key facts, and conclusions."
             ),
         )
-
-        return final_summary
 
 """"
 if __name__ == '__main__':
