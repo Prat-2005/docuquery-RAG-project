@@ -40,3 +40,7 @@ Thumbs.db
 *.key
 *.p12
 secrets/
+
+# Local directories
+
+test/

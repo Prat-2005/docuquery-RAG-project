@@ -21,6 +21,13 @@ SessionLocal = sessionmaker(bind=engine)
 class Base(DeclarativeBase):
     pass
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 def test_db_connection():
     try:
         with engine.connect() as connection:

@@ -1,18 +1,34 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, APIRouter, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from backend.api.auth import router as auth_router
+from backend.api.conversations import router as conversations_router
 from backend.retrieval import DocumentRetriever, RetrieverError
 from backend.generation import GenerativeGPT
 from backend.db.database import test_db_connection
 
 app = FastAPI(
     title="DocuQuery - AI-Assited Document Reader",
+    openapi_tags=[
+        {"name": "Authentication", "description": "User login and registration"},
+        {"name": "Main Service", "description": "Main app endpoints"},
+        {"name": "Test", "description": "Test and Connections"}
+    ],
 )
+
+app.include_router(auth_router)
+app.include_router(conversations_router)
+
+service_router = APIRouter(prefix="/main", tags=["Main Service"])
+test_router = APIRouter(prefix="/test", tags=["Test"])
+
+app.include_router(service_router)
+app.include_router(test_router)
 
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 retriever = DocumentRetriever()
@@ -23,20 +39,20 @@ class QuestionRequest(BaseModel):
     improv_answer: str
     top_k: int = 3
 
-@app.get("/health")
+@test_router.get("/health")
 def health_check():
     return {"status": "running"}
 
-@app.get("/")
+@service_router.get("/")
 def frontend_home():
     return FileResponse("frontend/index.html")
 
-@app.get("/db-test")
+@test_router.get("/db-test")
 def db_test():
     result = test_db_connection()
     return result
 
-@app.post("/upload")
+@service_router.post("/upload")
 async def get_document(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="File name is required")
@@ -98,7 +114,7 @@ async def get_document(file: UploadFile = File(...)):
         if temporary_file is not None:
             Path(temporary_file.name).unlink(missing_ok=True)
 
-@app.post("/retrieve")
+@service_router.post("/retrieve")
 def retrieve_context(request: QuestionRequest):
     if not request.question.strip():
         raise HTTPException(
@@ -129,7 +145,7 @@ def retrieve_context(request: QuestionRequest):
             detail=str(e),
         ) from e
 
-@app.post("/generate")
+@service_router.post("/generate")
 def generate_answer(request: QuestionRequest):
     if not request.question.strip():
         raise HTTPException(
@@ -168,7 +184,7 @@ def generate_answer(request: QuestionRequest):
             detail=str(error),
         ) from error
 
-@app.post("/regenerate")
+@service_router.post("/regenerate")
 def regenerate_answer(request: QuestionRequest):
     if retriever.index is None:
         raise HTTPException(
