@@ -1,15 +1,13 @@
-from pathlib import Path
-from tempfile import NamedTemporaryFile
-
-from fastapi import FastAPI, File, APIRouter, HTTPException, UploadFile
+from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from backend.api.auth import router as auth_router
 from backend.api.conversations import router as conversations_router
-from backend.retrieval import DocumentRetriever, RetrieverError
-from backend.generation import GenerativeGPT
+from backend.api.documents import router as documents_router
+from backend.services.retrieval import DocumentRetriever
+from backend.services.generation import GenerativeGPT
 from backend.db.database import test_db_connection
 
 app = FastAPI(
@@ -23,6 +21,7 @@ app = FastAPI(
 
 app.include_router(auth_router)
 app.include_router(conversations_router)
+app.include_router(documents_router)
 
 service_router = APIRouter(prefix="/main", tags=["Main Service"])
 test_router = APIRouter(prefix="/test", tags=["Test"])
@@ -30,7 +29,6 @@ test_router = APIRouter(prefix="/test", tags=["Test"])
 app.include_router(service_router)
 app.include_router(test_router)
 
-ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 retriever = DocumentRetriever()
 generator = GenerativeGPT()
 
@@ -51,68 +49,6 @@ def frontend_home():
 def db_test():
     result = test_db_connection()
     return result
-
-@service_router.post("/upload")
-async def get_document(file: UploadFile = File(...)):
-    if not file.filename:
-        raise HTTPException(status_code=400, detail="File name is required")
-
-    extension = Path(file.filename).suffix.lower()
-
-    if extension not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail="Only .pdf, .docx & .txt files are supported",
-        )
-
-    file_data = await file.read()
-
-    if not file_data:
-        raise HTTPException(status_code=400, detail="Uploaded file is empty!")
-
-    temporary_file = None
-
-    try:
-        temporary_file = NamedTemporaryFile(
-            mode="wb",
-            suffix=extension,
-            delete=False,
-        )
-        temporary_file.write(file_data)
-        temporary_file.close()
-
-        retriever.reset()
-        retriever.upload(temporary_file.name)
-        retriever.chunk()
-        retriever.embedding()
-
-        try:
-            summary = generator.summarize_document(retriever.content)
-        except Exception:
-            summary = "The document was indexed successfully. Ask a question to explore its content."
-
-        return {
-            "filename": file.filename,
-            "message": "Document uploaded successfully!",
-            "chunk_count": len(retriever.chunks),
-            "summary": summary,
-        }
-
-    except RetrieverError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=str(e),
-        ) from e
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unexpected error: {str(e)}",
-        ) from e
-
-    finally:
-        if temporary_file is not None:
-            Path(temporary_file.name).unlink(missing_ok=True)
 
 @service_router.post("/retrieve")
 def retrieve_context(request: QuestionRequest):
