@@ -1,7 +1,6 @@
 import fitz
 import docx
-import faiss
-import numpy as np
+
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 
@@ -18,9 +17,13 @@ class DocumentRetriever:
     def __init__(self):
         self.content = ""
         self.chunks = []
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
-        self.index = None
-        self.filtered_chunk = []
+        self.model = None
+
+    def _get_model(self):
+        if self.model is None:
+            self.model = SentenceTransformer("all-MiniLM-L6-v2")
+
+        return self.model
 
     def upload(self, document: str | Path):
 
@@ -86,47 +89,25 @@ class DocumentRetriever:
 
             if start >= context_length or end >= context_length:
                 break
+            
+    def embed(
+        self,
+        texts: list[str],
+        batch_size: int = 256,
+    ) -> list[list[float]]:
+        if not texts:
+            raise ValueError("At least one text value is required")
 
-    def embedding(self):
-        if not self.chunks:
-            raise RuntimeError("Call chunk() before embedding()")
+        embeddings = self._get_model().encode(
+            texts,
+            batch_size=batch_size,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
 
-        embeddings = self.model.encode(self.chunks, normalize_embeddings=True)
-
-        self.index = faiss.IndexFlatL2(embeddings.shape[1])
-        self.index.add(np.array(embeddings, dtype=np.float32))  
-
-    def retrieve(self, query: str, top_k: int=3):
-        if self.index is None:
-            raise RuntimeError("Call embedding() before retrieve()")
-
-        top_k = min(top_k, len(self.chunks))
-
-        embedded_query = self.model.encode([query], normalize_embeddings=True)
-
-        _, indices = self.index.search(x=np.array(embedded_query, dtype=np.float32), k=top_k)
-
-        self.filtered_chunk = [self.chunks[i] for i in indices[0]]
-
-    def relevant_context(self) -> str:
-        return '\n'.join(f" - {chunk}" for chunk in self.filtered_chunk)
+        return embeddings.tolist()
 
     def reset(self):
         self.content = ""
         self.chunks.clear()
-        self.filtered_chunk.clear()
-        self.index = None
     
-"""
-if __name__ == '__main__':
-    retriever = DocumentRetriever()
-    #file = r"sample_docs/file-sample_150kB.pdf"
-    file = r"sample_docs/sample-files.com-basic-text.docx"
-    #file = r"sample_docs/output-onlinefiletools.txt"
-    retriever.upload(file)
-    retriever.chunk()
-    retriever.embedding()
-    retriever.retrieve("What is this document about?", top_k=3)
-    results = retriever.relevant_context()
-    print(results)
-"""

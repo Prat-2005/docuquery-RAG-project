@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from backend.db.models import (
     Conversation,
@@ -10,8 +10,8 @@ from backend.db.models import (
     Document,
     DocumentChunk,
 )
-from backend.services.retrieval import DocumentRetriever
-from backend.services.storage import save_uploaded_files
+from backend.services.document_retriever import DocumentRetriever
+from backend.services.data_storage import save_uploaded_files
 
 
 def process_document(document: Document, db: Session) -> None:
@@ -23,14 +23,18 @@ def process_document(document: Document, db: Session) -> None:
         retriever.upload(document.storage_path)
         retriever.chunk()
 
+        embeddings = retriever.embed(retriever.chunks)
+
         for chunk_index, content in enumerate(retriever.chunks):
             db.add(
                 DocumentChunk(
                     document_id=document.id,
                     chunk_index=chunk_index,
                     content=content,
-                    embedding=None,
-                    document_metadata={"source": document.filename},
+                    embedding=embeddings[chunk_index],
+                    document_metadata={
+                        "source": document.filename,
+                    },
                 )
             )
 
@@ -41,6 +45,7 @@ def process_document(document: Document, db: Session) -> None:
         db.rollback()
 
         failed_document = db.get(Document, document.id)
+
         if failed_document is not None:
             failed_document.status = "failed"
             db.commit()
@@ -61,35 +66,37 @@ async def save_documents(
 
     documents = []
 
-    try:
-        for saved_file in saved_files:
-            document = Document(
-                id=saved_file["document_id"],
-                user_id=current_user.id,
-                filename=saved_file["filename"],
-                storage_path=saved_file["storage_path"],
-                file_type=saved_file["file_type"],
-                file_size=saved_file["size"],
-                status="pending",
+    for saved_file in saved_files:
+        document = Document(
+            id=saved_file["document_id"],
+            user_id=current_user.id,
+            filename=saved_file["filename"],
+            storage_path=saved_file["storage_path"],
+            file_type=saved_file["file_type"],
+            file_size=saved_file["size"],
+            status="pending",
+        )
+
+        db.add(document)
+        db.add(
+            ConversationDocument(
+                conversation_id=conversation_id,
+                document_id=document.id,
             )
+        )
 
-            db.add(document)
-            db.add(
-                ConversationDocument(
-                    conversation_id=conversation_id,
-                    document_id=document.id,
-                )
-            )
-            documents.append(document)
+        documents.append(document)
 
-        db.commit()
+    db.commit()
 
-        for document in documents:
+    for document in documents:
+        try:
             process_document(document, db)
-
-    except Exception:
-        db.rollback()
-        raise
+        except Exception as error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to process {document.filename}",
+            ) from error
 
     return {
         "conversation_id": str(conversation_id),
@@ -102,6 +109,7 @@ async def save_documents(
             for document in documents
         ],
     }
+
 
 def attach_existing_document(
     conversation_id: UUID,
@@ -124,7 +132,16 @@ def attach_existing_document(
     )
 
     if conversation is None or document is None:
-        raise HTTPException(404, "Conversation or document not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation or document not found",
+        )
+
+    if document.status != "processed":
+        raise HTTPException(
+            status_code=409,
+            detail="Document is not ready for retrieval",
+        )
 
     association = db.get(
         ConversationDocument,

@@ -61,3 +61,6 @@ class MessageResponse(BaseModel):
     content: str
     created_id: datetime
 
+class ChatResponse(BaseModel):
+    user_message: MessageResponse
+    assistant_message: MessageResponse
