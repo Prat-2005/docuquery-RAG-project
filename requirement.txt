@@ -3,6 +3,8 @@ uvicorn[standard]
 python-multipart
 pydantic
 python-dotenv
+google-genai
+requests
 
 sqlalchemy
 alembic
@@ -14,4 +16,3 @@ PyMuPDF
 python-docx
 faiss-cpu
 numpy
-sentence-transformers

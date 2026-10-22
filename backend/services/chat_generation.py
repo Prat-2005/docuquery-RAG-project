@@ -1,8 +1,4 @@
-import os
-from openai import OpenAI
-from dotenv import load_dotenv
-
-load_dotenv()
+from backend.services.ai_client import AIClient
 
 class GenerativeGPT:
 
@@ -14,28 +10,16 @@ class GenerativeGPT:
             "If the answer is not in the context, say you do not know or no information "
             "available for this query."                  
         )
-        self.client = OpenAI(
-            base_url=os.environ.get("LLM_URL"),
-            api_key=os.environ.get("LLM_API_KEY"),
-        )
+        self.ai_client = AIClient()
         self.answer = ""
 
     def generate(self, context: str, question: str) -> str:
-        response = self.client.chat.completions.create(
-            model=os.environ.get("LLM_MODEL"),
-            messages=[
-                {"role": "system", "content": self.system_prompt},
-                {
-                    "role": "user",
-                    "content": (
-                        f"Document context:\n{context}\n\n"
-                        f"Question:\n{question}"
-                    ),
-                },
-            ],
+        prompt = (
+            f"{self.system_prompt}\n\n"
+            f"Document context:\n{context}\n\n"
+            f"Question:\n{question}"
         )
-
-        self.answer = response.choices[0].message.content
+        self.answer = self.ai_client.generate(prompt)
         return self.answer
 
     def regenerate(self, context: str, question: str, previous_answer: str) -> str:
@@ -44,37 +28,16 @@ class GenerativeGPT:
                 "Call generate() before regenerate()"
             )
 
-        response = self.client.chat.completions.create(
-            model=os.environ.get("LLM_MODEL"),
-            messages=[
-                {"role": "system", "content": self.system_prompt},
-                {
-                    "role": "user",
-                    "content": (
-                        f"Document context:\n{context}\n\n"
-                        f"Question:\n{question}\n\n"
-                        f"Previous answer:\n{previous_answer}\n\n"
-                        "Improve the previous answer using only the context. OR Find "
-                        "your own relevance from your trained data or research."
-                    ),
-                },
-            ],
+        prompt = (
+            f"{self.system_prompt}\n\n"
+            f"Document context:\n{context}\n\n"
+            f"Question:\n{question}\n\n"
+            f"Previous answer:\n{previous_answer}\n\n"
+            "Improve the previous answer using only the context. OR Find "
+            "your own relevance from your trained data or research."
         )
-
-        self.answer = response.choices[0].message.content
+        self.answer = self.ai_client.generate(prompt)
         return self.answer
-
-    def summarize_document(self, content: str) -> str:
-        max_characters = 25000
-        sampled_content = content[:max_characters + 1]
-
-        return self.generate(
-            context=sampled_content,
-            question=(
-                "Provide a concise summary of this document. "
-                "Mention its subject, purpose, key facts, and conclusions."
-            ),
-        )
 
 """"
 if __name__ == '__main__':

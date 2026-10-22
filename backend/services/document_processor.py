@@ -41,17 +41,12 @@ def process_document(document: Document, db: Session) -> None:
         document.status = "processed"
         db.commit()
 
-    except Exception:
-        db.rollback()
-
-        failed_document = db.get(Document, document.id)
-
-        if failed_document is not None:
-            failed_document.status = "failed"
-            db.commit()
-
-        raise
-
+    except Exception as e:
+        import traceback
+        traceback.print_exc()         
+        document.status = "failed"
+        db.commit()
+        raise                          
 
 async def save_documents(
     conversation_id: UUID,

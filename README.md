@@ -6,7 +6,7 @@ DocuQuery is an AI-powered document question-answering application. Upload a PDF
 
 - Upload and read `.pdf`, `.docx`, and `.txt` files
 - Extract and chunk document text
-- Create vector embeddings with Sentence Transformers
+- Create vector embeddings through the Hugging Face Inference API
 - Retrieve relevant passages with FAISS
 - Generate context-aware answers with an OpenAI-compatible LLM
 - Summarize large documents using chunked, multi-stage summarization
@@ -60,7 +60,12 @@ DocuQuery is an AI-powered document question-answering application. Upload a PDF
 
 | Variable | Description |
 | --- | --- |
-| `LLM_PROVIDER` | Optional provider label, such as `ollama` or `openai`. |
+| `GOOGLE_API_KEY` | Google AI Studio key for Gemini embeddings and generation. |
+| `JINA_API_KEY` | Jina key used as the embedding fallback. |
+| `EMBEDDING_PROVIDER` | `auto`, `gemini`, or `jina`; defaults to `auto`. |
+| `LLM_PROVIDER` | `auto`, `gemini`, or `ollama`; defaults to `auto`. |
+| `PRIVACY_MODE` | `on` uses Ollama for generation and Jina for embeddings; defaults to `off`. |
+| `GOOGLE_GENERATION_MODEL` | Gemini generation model; defaults to `gemini-3-flash-preview`. |
 | `LLM_URL` | OpenAI-compatible API base URL. |
 | `LLM_MODEL` | Model name used for answers and summaries. |
 | `LLM_API_KEY` | API key accepted by the configured endpoint. |
@@ -103,5 +108,8 @@ The interactive API documentation is available at http://127.0.0.1:8000/docs.
 
 - Uploaded document indexing is stored in memory by the running server and is reset when the application stops.
 - The frontend chat is stored in browser `sessionStorage`, so it survives refreshes but is cleared when the browser session ends or a new document is uploaded.
-- The first use of `all-MiniLM-L6-v2` downloads the embedding model.
+- Embeddings use Gemini `gemini-embedding-001`, with Jina `jina-embeddings-v3`
+  as the automatic fallback. Embeddings are cached in `.cache/embedding_cache.sqlite3`.
+- Both providers are configured to return 384-dimensional vectors for the existing
+  pgvector column. Do not mix providers for the same indexed corpus without re-indexing.
 - Large-document summaries make multiple LLM requests and may take longer than short documents.
