@@ -7,7 +7,6 @@ import sqlite3
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
 
 import requests
 from dotenv import load_dotenv
@@ -48,12 +47,17 @@ class OllamaProvider(LLMProvider):
         self.client = OpenAI(
             base_url=os.getenv("LLM_URL", "http://localhost:11434/v1"),
             api_key=os.getenv("LLM_API_KEY", "ollama"),
+            timeout=120,
         )
         self.model = os.getenv("LLM_MODEL")
         if not self.model:
             raise AIProviderError("LLM_MODEL is not configured for Ollama")
 
     def generate(self, prompt: str) -> str:
+        print(
+            f"Ollama: sending generation request to model {self.model}...",
+            flush=True,
+        )
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
@@ -61,6 +65,7 @@ class OllamaProvider(LLMProvider):
         answer = response.choices[0].message.content
         if not answer:
             raise AIProviderError("Ollama returned an empty response")
+        print("Ollama: generation request succeeded.", flush=True)
         return answer
 
 
@@ -78,7 +83,10 @@ class AIClient:
 
         google_key = os.getenv("GOOGLE_API_KEY")
         if google_key:
-            self.gemini = genai.Client(api_key=google_key)
+            self.gemini = genai.Client(
+                api_key=google_key,
+                http_options=types.HttpOptions(timeout=60_000),
+            )
 
         cache_path = Path(
             os.getenv(
@@ -102,8 +110,20 @@ class AIClient:
         delay = 1.0
         for attempt in range(4):
             try:
-                return operation()
+                print(
+                    f"{description}: sending request "
+                    f"(attempt {attempt + 1}/4)...",
+                    flush=True,
+                )
+                result = operation()
+                print(f"{description}: request succeeded.", flush=True)
+                return result
             except Exception as error:
+                print(
+                    f"{description}: attempt {attempt + 1}/4 failed: "
+                    f"{type(error).__name__}: {error}",
+                    flush=True,
+                )
                 if attempt == 3:
                     raise AIProviderError(
                         f"{description} failed after 3 retries: {error}"
@@ -192,6 +212,23 @@ class AIClient:
 
         return self._retry(request, "Jina embedding request")
 
+    def _provider_state_path(self) -> Path:
+        return Path(
+            os.getenv(
+                "EMBEDDING_PROVIDER_STATE_PATH",
+                ".cache/embedding_provider.txt",
+            )
+        )
+
+    def _read_provider_state(self) -> str | None:
+        path = self._provider_state_path()
+        return path.read_text(encoding="utf-8").strip() if path.exists() else None
+
+    def _write_provider_state(self, provider: str) -> None:
+        path = self._provider_state_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(provider, encoding="utf-8")
+
     def embed(self, chunks: list[str]) -> list[list[float]]:
         if not chunks:
             raise ValueError("At least one text value is required")
@@ -203,6 +240,8 @@ class AIClient:
             )
 
         provider = "jina" if use_jina else "gemini"
+        if self.embedding_provider == "auto" and not self.privacy_mode:
+            provider = self._read_provider_state() or provider
         embeddings: list[list[float] | None] = [None] * len(chunks)
         pending: list[tuple[int, str]] = []
 
@@ -245,6 +284,9 @@ class AIClient:
             embeddings = [None] * len(chunks)
             pending = list(enumerate(chunks))
             generated_items = fetch_pending(pending, provider)
+
+        if pending:
+            self._write_provider_state(provider)
 
         for (index, chunk), embedding in generated_items:
             if len(embedding) != self.EMBEDDING_DIMENSIONS:

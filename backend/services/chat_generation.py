@@ -14,12 +14,14 @@ class GenerativeGPT:
         self.answer = ""
 
     def generate(self, context: str, question: str) -> str:
+        print("Generation: preparing the answer request...", flush=True)
         prompt = (
             f"{self.system_prompt}\n\n"
             f"Document context:\n{context}\n\n"
             f"Question:\n{question}"
         )
         self.answer = self.ai_client.generate(prompt)
+        print("Generation: answer ready.", flush=True)
         return self.answer
 
     def regenerate(self, context: str, question: str, previous_answer: str) -> str:

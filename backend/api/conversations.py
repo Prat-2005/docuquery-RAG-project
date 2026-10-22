@@ -227,6 +227,7 @@ def create_conversation_message(
     )
 
     try:
+        print("Message: retrieving relevant document context...", flush=True)
         document_context = get_context(
             conversation_id=conversation_id,
             question=message_data.content,
@@ -240,6 +241,7 @@ def create_conversation_message(
             f"Retrieved document context:\n{document_context}"
         )
 
+        print("Message: generating the answer...", flush=True)
         answer = generator.generate(
             context=combined_context,
             question=message_data.content,

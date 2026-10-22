@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -86,7 +87,7 @@ async def save_documents(
 
     for document in documents:
         try:
-            process_document(document, db)
+            await asyncio.to_thread(process_document, document, db)
         except Exception as error:
             raise HTTPException(
                 status_code=500,

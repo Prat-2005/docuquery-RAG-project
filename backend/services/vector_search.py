@@ -25,7 +25,9 @@ def search_conversation_chunks(
     if top_k <= 0:
         raise ValueError("top_k must be greater than zero")
 
+    print("Retrieval: creating the question embedding...", flush=True)
     query_embedding = DocumentRetriever().embed([question])[0]
+    print("Retrieval: question embedding ready; querying PostgreSQL...", flush=True)
 
     statement = (
         select(DocumentChunk)
@@ -54,7 +56,9 @@ def search_conversation_chunks(
         .limit(top_k)
     )
 
-    return db.scalars(statement).all()
+    chunks = db.scalars(statement).all()
+    print(f"Retrieval: found {len(chunks)} matching chunk(s).", flush=True)
+    return chunks
 
 def backfill_embeddings(db: Session) -> int:
     chunks = db.scalars(
