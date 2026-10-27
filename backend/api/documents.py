@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.api.auth import get_current_user
+from backend.auth.dependencies import get_current_user
 from backend.db.database import get_db
 from backend.db.models import Conversation, User
 from backend.services.document_processor import (

@@ -1,17 +1,38 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict, Field
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 from uuid import UUID
 from typing import Literal
 
 
 class UserRegister(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=1)
+    new_password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if not any(character.isalpha() for character in value) or not any(
+            character.isdigit() for character in value
+        ):
+            raise ValueError("Password must contain at least one letter and one digit")
+        return value
 
 
 class Token(BaseModel):
@@ -21,6 +42,7 @@ class Token(BaseModel):
 
 class UserResponse(BaseModel):
     id: UUID
+    name: str | None
     email: EmailStr
     created_at: datetime
 

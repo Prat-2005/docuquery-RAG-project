@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from pydantic import BaseModel, Field
 
-from backend.api.auth import get_current_user
+from backend.auth.dependencies import get_current_user
 from backend.db.database import get_db
 from backend.db.models import (
     Conversation,
@@ -246,6 +246,14 @@ def create_conversation_message(
             context=combined_context,
             question=message_data.content,
         )
+
+        if conversation.title == "New Conversation" and not previous_messages:
+            generated_title = generator.generate_title(
+                question=message_data.content,
+                answer=answer,
+            )
+            if generated_title:
+                conversation.title = generated_title
 
         user_message = Message(
             conversation_id=conversation.id,

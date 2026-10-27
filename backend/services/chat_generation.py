@@ -7,6 +7,8 @@ class GenerativeGPT:
             "You are a document reader. " \
             "Your task is to help users answer questions about their uploaded documents. " \
             "Use only the provided document context. " \
+            "Infer a concise, descriptive conversation title from the discussion, " \
+            "but do not include the title in your answer unless the user asks for it. " \
             "If the answer is not in the context, say you do not know or no information "
             "available for this query."                  
         )
@@ -23,6 +25,19 @@ class GenerativeGPT:
         self.answer = self.ai_client.generate(prompt)
         print("Generation: answer ready.", flush=True)
         return self.answer
+
+    def generate_title(self, question: str, answer: str) -> str:
+        prompt = (
+            "Generate a concise, descriptive title for this conversation. "
+            "Use 3 to 8 words, return only the title, and do not use quotation marks.\n\n"
+            f"User question:\n{question}\n\n"
+            f"Assistant answer:\n{answer}"
+        )
+        generated_title = self.ai_client.generate(prompt).strip()
+        if not generated_title:
+            return ""
+        title = generated_title.splitlines()[0]
+        return title.strip("\"'` ")[:120]
 
     def regenerate(self, context: str, question: str, previous_answer: str) -> str:
         if not previous_answer:

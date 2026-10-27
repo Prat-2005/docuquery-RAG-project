@@ -46,3 +46,6 @@ secrets/
 
 test/
 uploads/
+
+# Local Files
+TASK.md

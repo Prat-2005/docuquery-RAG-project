@@ -45,13 +45,13 @@ DocuQuery is an AI-powered document question-answering application. Upload a PDF
 5. Start the application:
 
    ```powershell
-   uvicorn main:app --reload
+   python -m uvicorn backend.main:app --reload
    ```
 
    Or, when using `uv`:
 
    ```powershell
-   uv run uvicorn main:app --reload
+   uv run uvicorn backend.main:app --reload
    ```
 
 6. Open http://127.0.0.1:8000 in your browser.

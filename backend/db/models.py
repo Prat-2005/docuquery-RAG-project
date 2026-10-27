@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from .database import Base
-from sqlalchemy import String, Uuid, DateTime, Text, func, ForeignKey, BigInteger, Integer
+from sqlalchemy import String, Uuid, DateTime, Text, func, ForeignKey, BigInteger, Integer, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
@@ -22,9 +22,21 @@ class User(Base):
         index=True
     )
 
+    name: Mapped[str | None] = mapped_column(
+        String(120),
+        nullable=True,
+    )
+
     password_hash:Mapped[str] = mapped_column(
         Text,
-        nullable=False
+        nullable=True
+    )
+
+    google_id: Mapped[str | None] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=True,
+        index=True,
     )
 
     created_at:Mapped[datetime] = mapped_column(
@@ -44,6 +56,26 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
+class AuthToken(Base):
+    __tablename__ = "auth_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    token_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    pending_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    pending_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    pending_password_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    user: Mapped["User"] = relationship("User")
 
 
 class Conversation(Base):
