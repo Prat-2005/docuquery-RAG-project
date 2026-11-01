@@ -70,7 +70,7 @@ export const ChatSidebar = ({
               <FileText className="h-5 w-5 text-indigo-600" />
             </div>
             <div>
-              <span className="font-bold text-slate-900 text-base">DocuQuery</span>
+              <span className="font-bold text-slate-900 text-base">DocuQuery AI</span>
               <span className="block text-[10px] font-semibold uppercase tracking-wider text-indigo-600">
                 RAG Studio
               </span>

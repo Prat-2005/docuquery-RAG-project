@@ -8,6 +8,62 @@
   }
 }
 
+html.dark body {
+  @apply bg-slate-950 text-slate-100;
+}
+
+html.dark .bg-slate-50 {
+  @apply bg-slate-950;
+}
+
+html.dark .bg-white {
+  @apply bg-slate-900;
+}
+
+html.dark .bg-indigo-50 {
+  @apply bg-slate-800;
+}
+
+html.dark .border-indigo-100 {
+  @apply border-slate-700;
+}
+
+html.dark .text-slate-900 {
+  @apply text-slate-100;
+}
+
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
+  @apply text-slate-200;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500 {
+  @apply text-slate-400;
+}
+
+html.dark .bg-indigo-50 .text-slate-900 {
+  @apply text-slate-100;
+}
+
+html.dark .bg-indigo-50 .text-slate-600 {
+  @apply text-slate-300;
+}
+
+html.dark .border-slate-200,
+html.dark .border-slate-300 {
+  @apply border-slate-700;
+}
+
+html.dark input,
+html.dark select {
+  @apply border-slate-700 bg-slate-800 text-slate-100;
+}
+
+html.dark .hover\:bg-slate-50:hover {
+  @apply bg-slate-800;
+}
+
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }

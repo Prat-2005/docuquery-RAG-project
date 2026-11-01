@@ -283,7 +283,7 @@ const ChatPage = () => {
     if (!content || !selectedId || isSending) return;
 
     if (documents.length === 0) {
-      setError('Please upload at least one document first so DocuQuery can retrieve context and answer accurately.');
+      setError('Please upload at least one document first so DocuQuery AI can retrieve context and answer accurately.');
       return;
     }
 
@@ -448,7 +448,7 @@ const ChatPage = () => {
             </button>
             <div className="min-w-0">
               <h1 className="truncate text-base font-bold text-slate-900">
-                {selectedConversation?.title || 'DocuQuery Workspace'}
+                {selectedConversation?.title || 'DocuQuery AI Workspace'}
               </h1>
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <span>RAG Chat</span>
@@ -495,7 +495,7 @@ const ChatPage = () => {
               <div className="mb-4 rounded-2xl bg-indigo-100 p-4 text-indigo-600 shadow-xs">
                 <Sparkles className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">Welcome to DocuQuery</h2>
+              <h2 className="text-2xl font-bold text-slate-900">Welcome to DocuQuery AI</h2>
               <p className="mt-2 text-sm text-slate-500">
                 Select an existing conversation from the sidebar or start a new one to begin querying your documents.
               </p>
@@ -523,7 +523,7 @@ const ChatPage = () => {
               </div>
               <h2 className="text-xl font-bold text-slate-900">Add documents to get started</h2>
               <p className="mt-2 max-w-md text-xs sm:text-sm text-slate-500 leading-relaxed">
-                DocuQuery answers questions strictly grounded in your files. Upload your PDF, DOCX, or TXT documents below or in the right panel.
+                DocuQuery AI answers questions strictly grounded in your files. Upload your PDF, DOCX, or TXT documents below or in the right panel.
               </p>
 
               <div className="mt-6 w-full max-w-md">
@@ -620,7 +620,7 @@ const ChatPage = () => {
 
                       {!isUser && !message.pending && (
                         <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2 text-[11px] text-slate-400">
-                          <span>Grounded by DocuQuery RAG</span>
+                          <span>Grounded by DocuQuery AI</span>
                           <div className="flex items-center gap-1">
                             <button
                               type="button"

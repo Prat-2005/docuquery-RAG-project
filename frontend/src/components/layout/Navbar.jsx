@@ -20,17 +20,17 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
               <FileText className="w-6 h-6" />
-              <span>DocuQuery</span>
+              <span>DocuQuery AI</span>
             </Link>
             <div className="hidden md:ml-8 md:flex md:space-x-4">
               {navLinks.map((link) => (
-                <Link
+                <a
                   key={link.name}
-                  to={link.path}
+                  href={link.path}
                   className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
                 >
                   {link.name}
-                </Link>
+                </a>
               ))}
             </div>
           </div>
@@ -84,14 +84,14 @@ const Navbar = () => {
       {isOpen && (
         <div className="md:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-2">
           {navLinks.map((link) => (
-            <Link
+            <a
               key={link.name}
-              to={link.path}
+              href={link.path}
               className="block px-3 py-2 text-base font-medium text-slate-600 hover:text-indigo-600"
               onClick={() => setIsOpen(false)}
             >
               {link.name}
-            </Link>
+            </a>
           ))}
           <hr className="my-2" />
           {user ? (

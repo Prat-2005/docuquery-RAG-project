@@ -98,7 +98,7 @@ const LandingPage = () => {
               <span>Next-Gen RAG Experience</span>
             </div>
             <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-6">
-              Talk to your documents with <span className="text-indigo-600">DocuQuery</span>
+              Talk to your documents with <span className="text-indigo-600">DocuQuery AI</span>
             </h1>
             <p className="text-xl text-slate-600 mb-10 leading-relaxed">
               Upload your professional documents and get instant, accurate answers powered by
@@ -208,7 +208,7 @@ const LandingPage = () => {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">The RAG Workflow</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Here is how DocuQuery transforms your static files into an interactive knowledge base.
+              Here is how DocuQuery AI transforms your static files into an interactive knowledge base.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -237,7 +237,7 @@ const LandingPage = () => {
             <div className="lg:w-1/2">
               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">Built with Purpose</h2>
               <p className="text-lg text-slate-600 mb-8">
-                DocuQuery evolved through a rigorous development process, focusing on data integrity
+                DocuQuery AI evolved through a rigorous development process, focusing on data integrity
                 and retrieval accuracy.
               </p>
               <div className="space-y-4">
@@ -304,10 +304,10 @@ const LandingPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                to="/register"
+                to={user ? '/app' : '/login'}
                 className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
               >
-                Create Free Account <ArrowRight className="w-5 h-5" />
+                Start Chat <ArrowRight className="w-5 h-5" />
               </Link>
               <a
                 href="https://github.com/Prat-2005/docuquery-RAG-project"
@@ -330,7 +330,7 @@ const LandingPage = () => {
             <div className="col-span-1 md:col-span-2">
               <Link to="/" className="flex items-center gap-2 text-indigo-600 font-bold text-2xl mb-4">
                 <FileText className="w-6 h-6" />
-                <span>DocuQuery</span>
+                <span>DocuQuery AI</span>
               </Link>
               <p className="text-slate-500 max-w-sm leading-relaxed">
                 An advanced RAG-based document questioning system designed for students,
@@ -357,7 +357,7 @@ const LandingPage = () => {
           </div>
           <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-slate-400 text-xs">
-              © {new Date().getFullYear()} DocuQuery. Built with React, FastAPI, and PostgreSQL.
+              © {new Date().getFullYear()} DocuQuery AI. Built with React, FastAPI, and PostgreSQL.
             </p>
             <div className="flex items-center gap-4">
               <Lock className="w-4 h-4 text-slate-300" />

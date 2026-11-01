@@ -49,7 +49,7 @@ const RegisterPage = () => {
           <div className="p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-slate-900">Create Account</h1>
-              <p className="text-slate-500 mt-2">Join DocuQuery and start chatting with your data</p>
+              <p className="text-slate-500 mt-2">Join DocuQuery AI and start chatting with your data</p>
             </div>
 
             {success ? (

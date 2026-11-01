@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/layout/Navbar';
@@ -12,12 +12,14 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import ChatPage from './pages/ChatPage';
+import SettingsPage from './pages/SettingsPage';
+import { authService } from './services/authService';
 
-const SettingsPage = () => (
-  <div className="p-8 text-center">
-    <h1 className="text-2xl font-bold">Settings Page Coming Soon</h1>
-  </div>
-);
+const applyTheme = (theme) => {
+  const root = document.documentElement;
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  root.classList.toggle('dark', theme === 'dark' || (theme === 'system' && prefersDark));
+};
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -28,7 +30,29 @@ const ProtectedRoute = ({ children }) => {
 
 const AppContent = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const isAppRoute = location.pathname.startsWith('/app');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'system';
+    applyTheme(savedTheme);
+
+    if (!user) return undefined;
+
+    let active = true;
+    authService.getSettings()
+      .then((settings) => {
+        if (active && settings.theme) {
+          localStorage.setItem('theme', settings.theme);
+          applyTheme(settings.theme);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   return (
     <PageWrapper>
