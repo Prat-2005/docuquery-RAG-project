@@ -21,6 +21,16 @@ build/
 dist/
 *.egg-info/
 
+# Frontend dependencies and tooling output
+node_modules/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+.nyc_output/
+
 # Local tools and editor files
 .vscode/
 .idea/
