@@ -72,7 +72,7 @@ class OllamaProvider(LLMProvider):
 class AIClient:
     EMBEDDING_DIMENSIONS = 384
     EMBEDDING_BATCH_SIZE = 32
-    GEMINI_EMBEDDING_MODEL = os.getenv("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
+    GEMINI_EMBEDDING_MODEL = os.getenv("GEMINI_EMBEDDING_MODEL", "text-embedding-001")
     JINA_EMBEDDING_MODEL = os.getenv("JINA_EMBEDDING_MODEL", "jina-embeddings-v3")
 
     def __init__(self):

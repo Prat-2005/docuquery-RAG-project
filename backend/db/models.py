@@ -10,8 +10,8 @@ class User(Base):
     __tablename__ = "users"
 
     id:Mapped[uuid.UUID] = mapped_column(
-        Uuid, 
-        primary_key=True, 
+        Uuid,
+        primary_key=True,
         default=uuid.uuid4
     )
 
@@ -43,7 +43,7 @@ class User(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False
-    ) 
+    )
 
     conversations: Mapped[list["Conversation"]] = relationship(
         "Conversation",
@@ -56,6 +56,35 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
+    settings: Mapped["UserSettings"] = relationship(
+        "UserSettings",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+class UserSettings(Base):
+    __tablename__ = "user_settings"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    llm_provider: Mapped[str] = mapped_column(String(50), server_default="openai")
+    llm_model: Mapped[str] = mapped_column(String(100), nullable=True)
+    api_base_url: Mapped[str | None] = mapped_column(Text)
+    api_key_masked: Mapped[str | None] = mapped_column(String(255)) # Stores masked version or pointer
+
+    chunk_size: Mapped[int] = mapped_column(Integer, server_default="1000")
+    chunk_overlap: Mapped[int] = mapped_column(Integer, server_default="200")
+    top_k: Mapped[int] = mapped_column(Integer, server_default="3")
+
+    theme: Mapped[str] = mapped_column(String(20), server_default="system")
+
+    user: Mapped["User"] = relationship("User", back_populates="settings")
 
 class AuthToken(Base):
     __tablename__ = "auth_tokens"
@@ -233,7 +262,7 @@ class DocumentChunk(Base):
         primary_key=True,
         default=uuid.uuid4
     )
-    
+
     document_id:Mapped[uuid.UUID] = mapped_column(
         Uuid,
         ForeignKey("documents.id", ondelete="CASCADE"),

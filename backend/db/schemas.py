@@ -3,7 +3,6 @@ from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 from uuid import UUID
 from typing import Literal
 
-
 class UserRegister(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     email: EmailStr
@@ -47,6 +46,11 @@ class UserResponse(BaseModel):
     created_at: datetime
 
 
+class UserUpdate(BaseModel):
+    name: str | None = None
+    email: EmailStr | None = None
+
+
 class ConversationCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -86,3 +90,24 @@ class MessageResponse(BaseModel):
 class ChatResponse(BaseModel):
     user_message: MessageResponse
     assistant_message: MessageResponse
+
+class UserSettingsRequest(BaseModel):
+    llm_provider: str | None = None
+    llm_model: str | None = None
+    api_base_url: str | None = None
+    api_key_masked: str | None = None
+    chunk_size: int | None = None
+    chunk_overlap: int | None = None
+    top_k: int | None = None
+    theme: str | None = None
+
+class UserSettingsResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    llm_provider: str
+    llm_model: str | None
+    api_base_url: str | None
+    api_key_masked: str | None
+    chunk_size: int
+    chunk_overlap: int
+    top_k: int
+    theme: str

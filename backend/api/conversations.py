@@ -1,12 +1,10 @@
-from datetime import datetime, timezone
-from uuid import UUID
-
-from backend.services.chat_generation import GenerativeGPT
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
+from threading import Event, Lock
+from time import monotonic
+from uuid import UUID, uuid4
+from fastapi import APIRouter, Depends, Header, HTTPException, status, File, UploadFile
 from pydantic import BaseModel, Field
+from sqlalchemy import select, update
+from sqlalchemy.orm import Session
 
 from backend.auth.dependencies import get_current_user
 from backend.db.database import get_db
@@ -16,26 +14,77 @@ from backend.db.models import (
     Document,
     Message,
     User,
+    UserSettings
 )
 from backend.db.schemas import (
-    ChatResponse,
     ConversationCreate,
     ConversationResponse,
     MessageCreate,
     MessageResponse,
+    ChatResponse,
+    UserSettingsRequest,
+    UserSettingsResponse
 )
 from backend.services.vector_search import search_conversation_chunks
-
+from backend.services.document_processor import (
+    attach_existing_document,
+    save_documents,
+)
+from datetime import datetime, timezone
+from backend.services.chat_generation import GenerativeGPT
 
 router = APIRouter(tags=["Conversations"])
 generator = GenerativeGPT()
+_active_requests: dict[str, Event] = {}
+_cancelled_request_ids: dict[str, float] = {}
+_active_requests_lock = Lock()
 
+
+def _register_request(request_id: str) -> Event:
+    cancellation = Event()
+    with _active_requests_lock:
+        cutoff = monotonic() - 60
+        expired_ids = [
+            request_id
+            for request_id, cancelled_at in _cancelled_request_ids.items()
+            if cancelled_at < cutoff
+        ]
+        for expired_id in expired_ids:
+            _cancelled_request_ids.pop(expired_id, None)
+        if request_id in _cancelled_request_ids:
+            cancellation.set()
+            _cancelled_request_ids.pop(request_id, None)
+        _active_requests[request_id] = cancellation
+    return cancellation
+
+
+def _remove_request(request_id: str) -> None:
+    with _active_requests_lock:
+        _active_requests.pop(request_id, None)
+        _cancelled_request_ids.pop(request_id, None)
+
+
+def _cancel_request(request_id: str) -> bool:
+    with _active_requests_lock:
+        cancellation = _active_requests.get(request_id)
+        _cancelled_request_ids[request_id] = monotonic()
+        if cancellation is not None:
+            cancellation.set()
+            return True
+    return False
+
+
+def _raise_if_cancelled(cancellation: Event) -> None:
+    if cancellation.is_set():
+        raise HTTPException(
+            status_code=499,
+            detail="Message generation was cancelled",
+        )
 
 class QuestionRequest(BaseModel):
     question: str
     improv_answer: str | None = None
     top_k: int = Field(default=3, gt=0, le=50)
-
 
 def get_context(
     conversation_id: UUID,
@@ -68,7 +117,6 @@ def get_context(
     "/conversations",
     response_model=list[ConversationResponse],
 )
-
 def get_conversations(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -100,7 +148,6 @@ def get_conversations(
     response_model=ConversationResponse,
     status_code=status.HTTP_201_CREATED,
 )
-
 def create_conversation(
     conversation_data: ConversationCreate,
     current_user: User = Depends(get_current_user),
@@ -123,11 +170,34 @@ def create_conversation(
     )
 
 
+@router.delete("/conversations/{conversation_id}")
+def delete_conversation(
+    conversation_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    conversation = db.scalar(
+        select(Conversation).where(
+            Conversation.id == conversation_id,
+            Conversation.user_id == current_user.id,
+        )
+    )
+
+    if conversation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found",
+        )
+
+    db.delete(conversation)
+    db.commit()
+    return {"message": "Conversation deleted successfully"}
+
+
 @router.get(
     "/conversations/{conversation_id}/messages",
     response_model=list[MessageResponse],
 )
-
 def get_conversation_messages(
     conversation_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -169,13 +239,15 @@ def get_conversation_messages(
     response_model=ChatResponse,
     status_code=status.HTTP_201_CREATED,
 )
-
 def create_conversation_message(
     conversation_id: UUID,
     message_data: MessageCreate,
+    request_id: str | None = Header(default=None, alias="X-Request-ID"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    request_id = request_id or str(uuid4())
+    cancellation = _register_request(request_id)
     conversation = db.scalar(
         select(Conversation).where(
             Conversation.id == conversation_id,
@@ -184,12 +256,14 @@ def create_conversation_message(
     )
 
     if conversation is None:
+        _remove_request(request_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found",
         )
 
     if not message_data.content.strip():
+        _remove_request(request_id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Question cannot be empty",
@@ -210,6 +284,7 @@ def create_conversation_message(
     )
 
     if processed_document is None:
+        _remove_request(request_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="This conversation has no processed documents",
@@ -227,7 +302,7 @@ def create_conversation_message(
     )
 
     try:
-        print("Message: retrieving relevant document context...", flush=True)
+        _raise_if_cancelled(cancellation)
         document_context = get_context(
             conversation_id=conversation_id,
             question=message_data.content,
@@ -241,12 +316,13 @@ def create_conversation_message(
             f"Retrieved document context:\n{document_context}"
         )
 
-        print("Message: generating the answer...", flush=True)
+        _raise_if_cancelled(cancellation)
         answer = generator.generate(
             context=combined_context,
             question=message_data.content,
         )
 
+        _raise_if_cancelled(cancellation)
         if conversation.title == "New Conversation" and not previous_messages:
             generated_title = generator.generate_title(
                 question=message_data.content,
@@ -277,6 +353,7 @@ def create_conversation_message(
         db.refresh(assistant_message)
 
     except HTTPException:
+        db.rollback()
         raise
     except Exception as error:
         db.rollback()
@@ -284,6 +361,8 @@ def create_conversation_message(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate an answer",
         ) from error
+    finally:
+        _remove_request(request_id)
 
     return ChatResponse(
         user_message=MessageResponse(
@@ -302,8 +381,42 @@ def create_conversation_message(
         ),
     )
 
-@router.post("/conversations/{conversation_id}/retrieve")
 
+@router.post(
+    "/conversations/{conversation_id}/messages/{request_id}/stop",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def stop_conversation_message(
+    conversation_id: UUID,
+    request_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    conversation = db.scalar(
+        select(Conversation).where(
+            Conversation.id == conversation_id,
+            Conversation.user_id == current_user.id,
+        )
+    )
+    if conversation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found",
+        )
+
+    cancelled = _cancel_request(request_id)
+    return {
+        "request_id": request_id,
+        "cancelled": cancelled,
+        "message": (
+            "Message generation cancellation requested"
+            if cancelled
+            else "Message generation is no longer active"
+        ),
+    }
+
+
+@router.post("/conversations/{conversation_id}/retrieve")
 def retrieve_context(
     conversation_id: UUID,
     request: QuestionRequest,
@@ -366,7 +479,6 @@ def retrieve_context(
 @router.post(
     "/conversations/{conversation_id}/generate"
 )
-
 def generate_answer(
     conversation_id: UUID,
     request: QuestionRequest,
@@ -419,12 +531,10 @@ def generate_answer(
             status_code=500,
             detail=str(error),
         ) from error
-    
 
 @router.post(
     "/conversations/{conversation_id}/regenerate"
 )
-
 def regenerate_answer(
     conversation_id: UUID,
     request: QuestionRequest,
@@ -484,3 +594,33 @@ def regenerate_answer(
             status_code=500,
             detail=str(error),
         ) from error
+
+@router.get("/conversations/{conversation_id}/summary")
+def get_conversation_summary(
+    conversation_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    conversation = db.scalar(
+        select(Conversation).where(
+            Conversation.id == conversation_id,
+            Conversation.user_id == current_user.id,
+        )
+    )
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    docs = db.scalars(
+        select(Document)
+        .join(ConversationDocument)
+        .where(ConversationDocument.conversation_id == conversation_id)
+    ).all()
+
+    if not docs:
+        return {"summary": "No documents uploaded to this conversation."}
+
+    # In a real app, we'd fetch stored summaries. For now, we return a combined list.
+    return {
+        "summary": f"This conversation contains {len(docs)} document(s).",
+        "documents": [{"filename": d.filename, "status": d.status} for d in docs]
+    }

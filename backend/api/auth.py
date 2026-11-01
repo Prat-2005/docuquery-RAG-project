@@ -7,15 +7,15 @@ from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.db.database import get_db
-from backend.db.models import AuthToken, User
+from backend.db.models import AuthToken, User, UserSettings
 from backend.db.schemas import (
     ForgotPasswordRequest, ResetPasswordRequest, Token, UserLogin, UserRegister,
-    UserResponse,
+    UserResponse, UserUpdate, UserSettingsRequest, UserSettingsResponse
 )
 from backend.auth.security import hash_password, verify_password, create_access_token
 from backend.auth.dependencies import get_current_user
@@ -24,18 +24,16 @@ from backend.services.email_service import (
     send_password_reset_email,
 )
 
-try:
-    from authlib.integrations.starlette_client import OAuth
-except ImportError:
-    OAuth = None
+from authlib.integrations.base_client.errors import MismatchingStateError
+from authlib.integrations.starlette_client import OAuth
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 verification_router = APIRouter(tags=["Authentication"])
 logger = logging.getLogger(__name__)
 _rate_limits: dict[str, deque[float]] = defaultdict(deque)
-oauth = OAuth() if OAuth is not None else None
-if oauth is not None and os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET"):
+oauth = OAuth()
+if os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET"):
     oauth.register(
         name="google",
         client_id=os.getenv("GOOGLE_CLIENT_ID"),
@@ -98,7 +96,7 @@ async def register_user(
             detail="Email is already registered"
         )
 
-    base_url = os.getenv("FRONTEND_BASE_URL", "http://localhost:8000").rstrip("/")
+    base_url = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173").rstrip("/")
     await send_email_verification_email(
         email, f"{base_url}/verify-auth-credentials?token={raw_token}"
     )
@@ -160,7 +158,7 @@ async def forgot_password(
         )
         db.add(reset_token)
         db.commit()
-        base_url = os.getenv("FRONTEND_BASE_URL", "http://localhost:8000").rstrip("/")
+        base_url = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173").rstrip("/")
         await send_password_reset_email(
             email, f"{base_url}/reset-password?token={raw_token}"
         )
@@ -251,7 +249,7 @@ async def google_login(request: Request):
     client_ip = request.client.host if request.client else "unknown"
     if not _check_rate_limit(f"google:{client_ip}", 10, 60):
         raise HTTPException(status_code=429, detail="Too many requests")
-    if oauth is None or not hasattr(oauth, "google"):
+    if not hasattr(oauth, "google"):
         raise HTTPException(status_code=503, detail="Google OAuth is not configured")
     redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
     if not redirect_uri:
@@ -261,7 +259,7 @@ async def google_login(request: Request):
 
 @router.get("/google/callback")
 async def google_callback(request: Request, db: Session = Depends(get_db)):
-    if oauth is None or not hasattr(oauth, "google"):
+    if not hasattr(oauth, "google"):
         raise HTTPException(status_code=503, detail="Google OAuth is not configured")
     try:
         token = await oauth.google.authorize_access_token(request)
@@ -271,6 +269,12 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         email = str(user_info["email"]).lower()
         google_id = str(user_info["sub"])
         google_name = user_info.get("name")
+    except MismatchingStateError as exc:
+        logger.warning("Google OAuth state validation failed: %s", type(exc).__name__)
+        raise HTTPException(
+            status_code=400,
+            detail="Google sign-in expired or was opened from a different local host. Please try again.",
+        ) from exc
     except (KeyError, TypeError, ValueError, OSError) as exc:
         logger.error("Google OAuth token exchange failed: %s", type(exc).__name__)
         raise HTTPException(status_code=400, detail="Google authentication failed")
@@ -290,7 +294,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         user.google_id = google_id
     db.commit()
     access_token = create_access_token(str(user.id))
-    base_url = os.getenv("FRONTEND_BASE_URL", "http://localhost:8000").rstrip("/")
+    base_url = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173").rstrip("/")
     logger.info("Google OAuth login completed")
     return RedirectResponse(
         f"{base_url}/oauth/callback?token={access_token}",
@@ -303,6 +307,55 @@ def get_current_user_profile(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+def update_user_profile(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = db.get(User, current_user.id)
+    if user_update.name is not None:
+        user.name = user_update.name
+    if user_update.email is not None:
+        user.email = user_update.email.lower()
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+@router.get("/settings", response_model=UserSettingsResponse)
+def get_user_settings(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    settings = db.scalar(select(UserSettings).where(UserSettings.user_id == current_user.id))
+    if not settings:
+        # Create default settings if they don't exist
+        settings = UserSettings(user_id=current_user.id)
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+@router.patch("/settings", response_model=UserSettingsResponse)
+def update_user_settings(
+    settings_data: UserSettingsRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    settings = db.scalar(select(UserSettings).where(UserSettings.user_id == current_user.id))
+    if not settings:
+        settings = UserSettings(user_id=current_user.id)
+        db.add(settings)
+
+    for field, value in settings_data.model_dump(exclude_unset=True).items():
+        setattr(settings, field, value)
+
+    db.commit()
+    db.refresh(settings)
+    return settings
 
 @router.post("/logout")
 def logout_user(
