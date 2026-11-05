@@ -2,7 +2,7 @@ import React from 'react';
 
 const PageWrapper = ({ children }) => {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text-primary)] font-sans transition-colors duration-200">
       {children}
     </div>
   );

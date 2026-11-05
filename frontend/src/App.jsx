@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Navbar from './components/layout/Navbar';
 import PageWrapper from './components/layout/PageWrapper';
 
@@ -15,12 +16,6 @@ import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
 import { authService } from './services/authService';
 
-const applyTheme = (theme) => {
-  const root = document.documentElement;
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  root.classList.toggle('dark', theme === 'dark' || (theme === 'system' && prefersDark));
-};
-
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -31,20 +26,17 @@ const ProtectedRoute = ({ children }) => {
 const AppContent = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const { setTheme } = useTheme();
   const isAppRoute = location.pathname.startsWith('/app');
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'system';
-    applyTheme(savedTheme);
-
     if (!user) return undefined;
 
     let active = true;
     authService.getSettings()
       .then((settings) => {
         if (active && settings.theme) {
-          localStorage.setItem('theme', settings.theme);
-          applyTheme(settings.theme);
+          setTheme(settings.theme);
         }
       })
       .catch(() => {});
@@ -93,9 +85,11 @@ const AppContent = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <ThemeProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

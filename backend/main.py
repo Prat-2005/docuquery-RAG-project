@@ -12,7 +12,6 @@ from backend.api.auth import verification_router
 from backend.api.conversations import router as conversations_router
 from backend.api.documents import router as documents_router
 from backend.db.database import test_db_connection
-from backend.services.chat_generation import GenerativeGPT
 
 
 app = FastAPI(
@@ -45,8 +44,6 @@ app.include_router(documents_router)
 test_router = APIRouter(prefix="/test", tags=["Test"])
 
 app.include_router(test_router)
-
-generator = GenerativeGPT()
 
 @test_router.get("/health")
 def health_check():

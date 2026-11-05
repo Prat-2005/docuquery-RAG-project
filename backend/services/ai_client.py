@@ -5,94 +5,61 @@ import json
 import os
 import sqlite3
 import time
-from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
-from openai import OpenAI
+
 
 load_dotenv()
 
 
 class AIProviderError(RuntimeError):
-    pass
+    """Raised when the configured local model cannot complete a request."""
 
 
-class LLMProvider(ABC):
-    @abstractmethod
-    def generate(self, prompt: str) -> str:
-        raise NotImplementedError
+def configure_local_llm(settings: Mapping[str, object] | None = None) -> dict[str, str | None]:
+    settings = settings or {}
+    provider = settings.get("llm_provider") or os.getenv("LLM_PROVIDER", "local")
+    model = settings.get("llm_model") or os.getenv("LLM_MODEL")
+    base_url = settings.get("api_base_url") or os.getenv(
+        "LLM_URL",
+        "http://localhost:11434",
+    )
+    api_key = settings.get("api_key") or os.getenv("LLM_API_KEY")
 
+    if not isinstance(provider, str) or not provider.strip():
+        raise AIProviderError("Local LLM provider name is required.")
+    if not isinstance(model, str) or not model.strip():
+        raise AIProviderError("Local chat model name is required.")
+    if not isinstance(base_url, str) or not base_url.strip():
+        raise AIProviderError("Local LLM endpoint URL is required.")
 
-class GeminiProvider(LLMProvider):
-    def __init__(self, client: genai.Client, model: str):
-        self.client = client
-        self.model = model
+    base_url = base_url.strip().rstrip("/")
+    parsed_url = urlparse(base_url)
+    if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+        raise AIProviderError("A valid HTTP or HTTPS endpoint URL is required.")
+    if api_key is not None and not isinstance(api_key, str):
+        raise AIProviderError("API key must be a string.")
 
-    def generate(self, prompt: str) -> str:
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-        )
-        if not response.text:
-            raise AIProviderError("Gemini returned an empty response")
-        return response.text
-
-
-class OllamaProvider(LLMProvider):
-    def __init__(self):
-        self.client = OpenAI(
-            base_url=os.getenv("LLM_URL", "http://localhost:11434/v1"),
-            api_key=os.getenv("LLM_API_KEY", "ollama"),
-            timeout=120,
-        )
-        self.model = os.getenv("LLM_MODEL")
-        if not self.model:
-            raise AIProviderError("LLM_MODEL is not configured for Ollama")
-
-    def generate(self, prompt: str) -> str:
-        print(
-            f"Ollama: sending generation request to model {self.model}...",
-            flush=True,
-        )
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        answer = response.choices[0].message.content
-        if not answer:
-            raise AIProviderError("Ollama returned an empty response")
-        print("Ollama: generation request succeeded.", flush=True)
-        return answer
+    return {
+        "provider": provider.strip(),
+        "model": model.strip(),
+        "base_url": base_url,
+        "api_key": api_key.strip() if api_key and api_key.strip() else None,
+    }
 
 
 class AIClient:
     EMBEDDING_DIMENSIONS = 384
     EMBEDDING_BATCH_SIZE = 32
-    GEMINI_EMBEDDING_MODEL = os.getenv("GEMINI_EMBEDDING_MODEL", "text-embedding-001")
-    JINA_EMBEDDING_MODEL = os.getenv("JINA_EMBEDDING_MODEL", "jina-embeddings-v3")
 
-    def __init__(self):
-        self.privacy_mode = os.getenv("PRIVACY_MODE", "off").lower() == "on"
-        self.embedding_provider = os.getenv("EMBEDDING_PROVIDER", "auto").lower()
-        self.llm_provider = os.getenv("LLM_PROVIDER", "auto").lower()
-        self.gemini = None
-
-        google_key = os.getenv("GOOGLE_API_KEY")
-        if google_key:
-            self.gemini = genai.Client(
-                api_key=google_key,
-                http_options=types.HttpOptions(timeout=60_000),
-            )
-
+    def __init__(self, settings: Mapping[str, object] | None = None):
+        self.config = configure_local_llm(settings)
         cache_path = Path(
-            os.getenv(
-                "EMBEDDING_CACHE_PATH",
-                ".cache/embedding_cache.sqlite3",
-            )
+            os.getenv("EMBEDDING_CACHE_PATH", ".cache/embedding_cache.sqlite3")
         )
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         self.cache = sqlite3.connect(cache_path)
@@ -106,54 +73,55 @@ class AIClient:
         )
         self.cache.commit()
 
-    def _retry(self, operation, description: str):
+    @property
+    def api_root(self) -> str:
+        base_url = str(self.config["base_url"])
+        return base_url if base_url.endswith("/v1") else f"{base_url}/v1"
+
+    def _headers(self) -> dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        api_key = self.config.get("api_key")
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        return headers
+
+    def _request(self, path: str, payload: dict, description: str) -> dict:
         delay = 1.0
         for attempt in range(4):
             try:
-                print(
-                    f"{description}: sending request "
-                    f"(attempt {attempt + 1}/4)...",
-                    flush=True,
+                response = requests.post(
+                    f"{self.api_root}/{path}",
+                    headers=self._headers(),
+                    json=payload,
+                    timeout=120,
                 )
-                result = operation()
-                print(f"{description}: request succeeded.", flush=True)
-                return result
-            except Exception as error:
-                print(
-                    f"{description}: attempt {attempt + 1}/4 failed: "
-                    f"{type(error).__name__}: {error}",
-                    flush=True,
-                )
+                response.raise_for_status()
+                data = response.json()
+                if not isinstance(data, dict):
+                    raise AIProviderError(f"{description} returned an invalid response.")
+                return data
+            except (requests.RequestException, ValueError, AIProviderError) as error:
                 if attempt == 3:
                     raise AIProviderError(
-                        f"{description} failed after 3 retries: {error}"
+                        f"{description} failed. Check that the local model server is running."
                     ) from error
-                retry_after = getattr(
-                    getattr(error, "response", None),
-                    "headers",
-                    {},
-                ).get("Retry-After")
-                try:
-                    wait_seconds = float(retry_after)
-                except (TypeError, ValueError):
-                    wait_seconds = delay
-                time.sleep(wait_seconds)
+                time.sleep(delay)
                 delay = min(delay * 2, 8.0)
+        raise AssertionError("unreachable")
 
-    def _cache_key(self, text: str, provider: str) -> str:
-        value = f"{provider}:{text}".encode("utf-8")
+    def _cache_key(self, text: str) -> str:
+        provider = self._embedding_provider()
+        model = (
+            os.getenv("LOCAL_EMBEDDING_MODEL", "")
+            if provider == "local"
+            else os.getenv("JINA_EMBEDDING_MODEL", "jina-embeddings-v3")
+        )
+        value = f"{provider}:{model}:{text}".encode("utf-8")
         return hashlib.sha256(value).hexdigest()
-
-    def _normalize(self, embedding: list[float]) -> list[float]:
-        norm = sum(value * value for value in embedding) ** 0.5
-        if norm == 0:
-            raise AIProviderError("Embedding provider returned a zero vector")
-        return [value / norm for value in embedding]
 
     def _get_cached(self, key: str) -> list[float] | None:
         row = self.cache.execute(
-            "SELECT embedding FROM embeddings WHERE cache_key = ?",
-            (key,),
+            "SELECT embedding FROM embeddings WHERE cache_key = ?", (key,)
         ).fetchone()
         return json.loads(row[0]) if row else None
 
@@ -164,161 +132,130 @@ class AIClient:
         )
         self.cache.commit()
 
-    def _gemini_embeddings(self, texts: list[str]) -> list[list[float]]:
-        if self.gemini is None:
-            raise AIProviderError("GOOGLE_API_KEY is not configured")
+    def _normalize(self, embedding: list[float]) -> list[float]:
+        norm = sum(value * value for value in embedding) ** 0.5
+        if norm == 0:
+            raise AIProviderError("Embedding provider returned a zero vector.")
+        return [value / norm for value in embedding]
 
-        def request():
-            response = self.gemini.models.embed_content(
-                model=self.GEMINI_EMBEDDING_MODEL,
-                contents=texts,
-                config=types.EmbedContentConfig(
-                    outputDimensionality=self.EMBEDDING_DIMENSIONS,
-                ),
+    def _local_embed_batch(self, texts: list[str]) -> list[list[float]]:
+        model = os.getenv("LOCAL_EMBEDDING_MODEL")
+        if not model or model.startswith("YOUR_"):
+            raise AIProviderError(
+                "LOCAL_EMBEDDING_MODEL is required when EMBEDDING_PROVIDER=local."
             )
-            return [
-                [float(value) for value in embedding.values]
-                for embedding in response.embeddings
-            ]
+        response = self._request(
+            "embeddings",
+            {
+                "model": model,
+                "input": texts,
+            },
+            "Local embedding request",
+        )
+        data = response.get("data")
+        if not isinstance(data, list):
+            raise AIProviderError("Local embedding response did not contain data.")
+        ordered = sorted(data, key=lambda item: item.get("index", 0))
+        embeddings = [[float(value) for value in item["embedding"]] for item in ordered]
+        if len(embeddings) != len(texts):
+            raise AIProviderError("Local embedding model returned an incomplete batch.")
+        return embeddings
 
-        return self._retry(request, "Gemini embedding request")
-
-    def _jina_embeddings(self, texts: list[str]) -> list[list[float]]:
+    def _jina_embed_batch(self, texts: list[str]) -> list[list[float]]:
         api_key = os.getenv("JINA_API_KEY")
-        if not api_key:
-            raise AIProviderError("JINA_API_KEY is not configured")
-
-        def request():
-            response = requests.post(
-                "https://api.jina.ai/v1/embeddings",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": self.JINA_EMBEDDING_MODEL,
-                    "input": texts,
-                    "dimensions": self.EMBEDDING_DIMENSIONS,
-                    "normalized": True,
-                },
-                timeout=30,
+        if not api_key or api_key.startswith("YOUR_"):
+            raise AIProviderError(
+                "JINA_API_KEY is required when EMBEDDING_PROVIDER=jina."
             )
+
+        response = requests.post(
+            os.getenv("JINA_EMBEDDING_URL", "https://api.jina.ai/v1/embeddings"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": os.getenv("JINA_EMBEDDING_MODEL", "jina-embeddings-v3"),
+                "input": texts,
+                "dimensions": self.EMBEDDING_DIMENSIONS,
+                "normalized": True,
+            },
+            timeout=120,
+        )
+        try:
             response.raise_for_status()
             data = response.json().get("data", [])
-            return [
+            ordered = sorted(data, key=lambda item: item["index"])
+            embeddings = [
                 [float(value) for value in item["embedding"]]
-                for item in sorted(data, key=lambda item: item["index"])
+                for item in ordered
             ]
+        except (requests.RequestException, ValueError, KeyError, TypeError) as error:
+            raise AIProviderError("Third-party embedding request failed.") from error
 
-        return self._retry(request, "Jina embedding request")
-
-    def _provider_state_path(self) -> Path:
-        return Path(
-            os.getenv(
-                "EMBEDDING_PROVIDER_STATE_PATH",
-                ".cache/embedding_provider.txt",
+        if len(embeddings) != len(texts):
+            raise AIProviderError(
+                "Third-party embedding provider returned an incomplete batch."
             )
-        )
+        return embeddings
 
-    def _read_provider_state(self) -> str | None:
-        path = self._provider_state_path()
-        return path.read_text(encoding="utf-8").strip() if path.exists() else None
-
-    def _write_provider_state(self, provider: str) -> None:
-        path = self._provider_state_path()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(provider, encoding="utf-8")
+    def _embedding_provider(self) -> str:
+        provider = os.getenv("EMBEDDING_PROVIDER", "local").strip().lower()
+        if provider not in {"local", "jina"}:
+            raise AIProviderError("EMBEDDING_PROVIDER must be local or jina.")
+        return provider
 
     def embed(self, chunks: list[str]) -> list[list[float]]:
         if not chunks:
-            raise ValueError("At least one text value is required")
+            raise ValueError("At least one text value is required.")
 
-        use_jina = self.privacy_mode or self.embedding_provider == "jina"
-        if self.embedding_provider not in {"auto", "gemini", "jina"}:
-            raise AIProviderError(
-                "EMBEDDING_PROVIDER must be auto, gemini, or jina"
-            )
-
-        provider = "jina" if use_jina else "gemini"
-        if self.embedding_provider == "auto" and not self.privacy_mode:
-            provider = self._read_provider_state() or provider
+        provider = self._embedding_provider()
         embeddings: list[list[float] | None] = [None] * len(chunks)
         pending: list[tuple[int, str]] = []
-
         for index, chunk in enumerate(chunks):
-            key = self._cache_key(chunk, provider)
-            cached = self._get_cached(key)
-            if cached is not None:
-                embeddings[index] = cached
-            else:
+            cache_key = self._cache_key(f"{provider}:{chunk}")
+            cached = self._get_cached(cache_key)
+            if cached is None:
                 pending.append((index, chunk))
+            else:
+                embeddings[index] = cached
 
-        def fetch_pending(items, selected_provider):
-            generated_items = []
-            for batch_start in range(0, len(items), self.EMBEDDING_BATCH_SIZE):
-                batch = items[
-                    batch_start:batch_start + self.EMBEDDING_BATCH_SIZE
-                ]
-                pending_texts = [chunk for _, chunk in batch]
-                generated = (
-                    self._gemini_embeddings(pending_texts)
-                    if selected_provider == "gemini"
-                    else self._jina_embeddings(pending_texts)
-                )
-                if len(generated) != len(batch):
-                    raise AIProviderError(
-                        "Embedding provider returned an incomplete batch"
-                    )
-                generated_items.extend(zip(batch, generated))
-            return generated_items
-
-        try:
-            generated_items = fetch_pending(pending, provider)
-        except AIProviderError as error:
-            if provider != "gemini" or self.embedding_provider != "auto":
-                raise
-            print(
-                f"Gemini embedding unavailable; falling back to Jina: {error}"
+        for start in range(0, len(pending), self.EMBEDDING_BATCH_SIZE):
+            batch = pending[start : start + self.EMBEDDING_BATCH_SIZE]
+            generated = (
+                self._jina_embed_batch([text for _, text in batch])
+                if provider == "jina"
+                else self._local_embed_batch([text for _, text in batch])
             )
-            provider = "jina"
-            embeddings = [None] * len(chunks)
-            pending = list(enumerate(chunks))
-            generated_items = fetch_pending(pending, provider)
-
-        if pending:
-            self._write_provider_state(provider)
-
-        for (index, chunk), embedding in generated_items:
-            if len(embedding) != self.EMBEDDING_DIMENSIONS:
-                raise AIProviderError(
-                    f"Expected {self.EMBEDDING_DIMENSIONS}-dimensional embeddings"
-                )
-            normalized = self._normalize(embedding)
-            embeddings[index] = normalized
-            self._save_cached(self._cache_key(chunk, provider), normalized)
+            for (index, chunk), embedding in zip(
+                batch, generated
+            ):
+                if len(embedding) != self.EMBEDDING_DIMENSIONS:
+                    raise AIProviderError(
+                        f"Embedding provider must return {self.EMBEDDING_DIMENSIONS}-dimensional vectors."
+                    )
+                normalized = self._normalize(embedding)
+                embeddings[index] = normalized
+                self._save_cached(self._cache_key(f"{provider}:{chunk}"), normalized)
 
         return [embedding for embedding in embeddings if embedding is not None]
 
-    def _gemini_llm(self) -> GeminiProvider:
-        if self.gemini is None:
-            raise AIProviderError("GOOGLE_API_KEY is not configured")
-        return GeminiProvider(
-            self.gemini,
-            os.getenv("GOOGLE_GENERATION_MODEL", "gemini-3-flash-preview"),
-        )
-
     def generate(self, prompt: str) -> str:
-        if self.llm_provider not in {"auto", "gemini", "ollama"}:
-            raise AIProviderError("LLM_PROVIDER must be auto, gemini, or ollama")
-
-        if self.privacy_mode or self.llm_provider == "ollama":
-            return OllamaProvider().generate(prompt)
-
-        if self.llm_provider == "gemini":
-            return self._gemini_llm().generate(prompt)
-
+        response = self._request(
+            "chat/completions",
+            {
+                "model": self.config["model"],
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+            },
+            "Local generation request",
+        )
         try:
-            return self._gemini_llm().generate(prompt)
-        except Exception as error:
-            print(f"Gemini generation unavailable; falling back to Ollama: {error}")
-            return OllamaProvider().generate(prompt)
+            content = response["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as error:
+            raise AIProviderError(
+                "Local generation response did not contain a message."
+            ) from error
+        if not isinstance(content, str) or not content.strip():
+            raise AIProviderError("Local generation returned an empty response.")
+        return content.strip()

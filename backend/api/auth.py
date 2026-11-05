@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from backend.db.database import get_db
 from backend.db.models import AuthToken, User, UserSettings
 from backend.db.schemas import (
-    ForgotPasswordRequest, ResetPasswordRequest, Token, UserLogin, UserRegister,
+    ChangePasswordRequest, ForgotPasswordRequest, ResetPasswordRequest, Token, UserLogin, UserRegister,
     UserResponse, UserUpdate, UserSettingsRequest, UserSettingsResponse
 )
 from backend.auth.security import hash_password, verify_password, create_access_token
@@ -33,6 +33,13 @@ verification_router = APIRouter(tags=["Authentication"])
 logger = logging.getLogger(__name__)
 _rate_limits: dict[str, deque[float]] = defaultdict(deque)
 oauth = OAuth()
+
+
+def _masked_env_key() -> str | None:
+    value = os.getenv("LLM_API_KEY")
+    if not value or value.startswith("YOUR_"):
+        return None
+    return f"{'*' * max(0, len(value) - 4)}{value[-4:]}"
 if os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET"):
     oauth.register(
         name="google",
@@ -325,6 +332,21 @@ def update_user_profile(
     db.refresh(user)
     return user
 
+
+@router.post("/change-password")
+def change_password(
+    request_data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = db.get(User, current_user.id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.password_hash = hash_password(request_data.new_password)
+    db.commit()
+    return {"message": "Password changed successfully"}
+
 @router.get("/settings", response_model=UserSettingsResponse)
 def get_user_settings(
     current_user: User = Depends(get_current_user),
@@ -333,10 +355,17 @@ def get_user_settings(
     settings = db.scalar(select(UserSettings).where(UserSettings.user_id == current_user.id))
     if not settings:
         # Create default settings if they don't exist
-        settings = UserSettings(user_id=current_user.id)
+        settings = UserSettings(
+            user_id=current_user.id,
+            llm_provider="local",
+            llm_model=os.getenv("LLM_MODEL"),
+            api_base_url=os.getenv("LLM_URL", "http://localhost:11434"),
+        )
         db.add(settings)
         db.commit()
         db.refresh(settings)
+    if not settings.api_key_masked:
+        settings.api_key_masked = _masked_env_key()
     return settings
 
 @router.patch("/settings", response_model=UserSettingsResponse)
@@ -347,14 +376,24 @@ def update_user_settings(
 ):
     settings = db.scalar(select(UserSettings).where(UserSettings.user_id == current_user.id))
     if not settings:
-        settings = UserSettings(user_id=current_user.id)
+        settings = UserSettings(
+            user_id=current_user.id,
+            llm_provider="local",
+            llm_model=os.getenv("LLM_MODEL"),
+            api_base_url=os.getenv("LLM_URL", "http://localhost:11434"),
+        )
         db.add(settings)
 
-    for field, value in settings_data.model_dump(exclude_unset=True).items():
+    for field, value in settings_data.model_dump(
+        exclude_unset=True,
+        exclude={"api_key_masked"},
+    ).items():
         setattr(settings, field, value)
 
     db.commit()
     db.refresh(settings)
+    if not settings.api_key_masked:
+        settings.api_key_masked = _masked_env_key()
     return settings
 
 @router.post("/logout")

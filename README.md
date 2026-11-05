@@ -6,9 +6,9 @@ DocuQuery is an AI-powered document question-answering application. Upload a PDF
 
 - Upload and read `.pdf`, `.docx`, and `.txt` files
 - Extract and chunk document text
-- Create vector embeddings through the Hugging Face Inference API
+- Create vector embeddings through a local or optional third-party provider
 - Retrieve relevant passages with FAISS
-- Generate context-aware answers with an OpenAI-compatible LLM
+- Generate context-aware answers with a local OpenAI-compatible LLM
 - Summarize large documents using chunked, multi-stage summarization
 - Regenerate answers and edit previous questions
 - Keep the current chat available across page refreshes during the browser session
@@ -16,8 +16,7 @@ DocuQuery is an AI-powered document question-answering application. Upload a PDF
 ## Requirements
 
 - Python 3.10 or newer
-- An OpenAI-compatible LLM endpoint
-- Ollama, OpenAI, or another compatible provider
+- A local OpenAI-compatible model endpoint, such as Ollama or LM Studio
 
 ## Setup
 
@@ -40,7 +39,7 @@ DocuQuery is an AI-powered document question-answering application. Upload a PDF
    Copy-Item .env.example .env
    ```
 
-4. Update `.env` with your LLM endpoint, model, and API key.
+4. Update `.env` with your local endpoint and chat model. Embedding providers are configured only in `.env`.
 
 5. Start the application:
 
@@ -60,23 +59,32 @@ DocuQuery is an AI-powered document question-answering application. Upload a PDF
 
 | Variable | Description |
 | --- | --- |
-| `GOOGLE_API_KEY` | Google AI Studio key for Gemini embeddings and generation. |
-| `JINA_API_KEY` | Jina key used as the embedding fallback. |
-| `EMBEDDING_PROVIDER` | `auto`, `gemini`, or `jina`; defaults to `auto`. |
-| `LLM_PROVIDER` | `auto`, `gemini`, or `ollama`; defaults to `auto`. |
-| `PRIVACY_MODE` | `on` uses Ollama for generation and Jina for embeddings; defaults to `off`. |
-| `GOOGLE_GENERATION_MODEL` | Gemini generation model; defaults to `gemini-3-flash-preview`. |
-| `LLM_URL` | OpenAI-compatible API base URL. |
-| `LLM_MODEL` | Model name used for answers and summaries. |
-| `LLM_API_KEY` | API key accepted by the configured endpoint. |
+| `LLM_URL` | Local OpenAI-compatible API base URL, for example `http://localhost:11434`. |
+| `LLM_MODEL` | Local model name used for answers and titles. |
+| `EMBEDDING_PROVIDER` | `local` (default) or optional `jina`; configured only in `.env`. |
+| `LOCAL_EMBEDDING_MODEL` | Local embedding model, when `EMBEDDING_PROVIDER=local`. |
+| `JINA_EMBEDDING_MODEL` | Third-party Jina embedding model, when `EMBEDDING_PROVIDER=jina`. |
+| `JINA_EMBEDDING_URL` | Jina embedding endpoint, when `EMBEDDING_PROVIDER=jina`. |
+| `JINA_API_KEY` | Jina API key, when `EMBEDDING_PROVIDER=jina`. |
+| `LLM_API_KEY` | Optional key for a local server that requires authentication. |
 
-For local Ollama, the default values are usually:
+For local Ollama, configure:
 
 ```env
-LLM_PROVIDER=YOUR_LLM_PROVIDER
-LLM_URL=YOUR_LLM_PROVIDER_URL
-LLM_MODEL=YOUR_LLM_MODEL
-LLM_API_KEY=YOUR_LLM_API_KEY
+LLM_URL=http://localhost:11434
+LLM_MODEL=YOUR_LOCAL_CHAT_MODEL
+LLM_API_KEY=
+EMBEDDING_PROVIDER=local
+LOCAL_EMBEDDING_MODEL=YOUR_LOCAL_EMBEDDING_MODEL
+```
+
+To use the optional third-party Jina embedding model instead:
+
+```env
+EMBEDDING_PROVIDER=jina
+JINA_EMBEDDING_MODEL=jina-embeddings-v3
+JINA_EMBEDDING_URL=https://api.jina.ai/v1/embeddings
+JINA_API_KEY=YOUR_JINA_API_KEY
 ```
 
 ## API Endpoints
@@ -108,8 +116,8 @@ The interactive API documentation is available at http://127.0.0.1:8000/docs.
 
 - Uploaded document indexing is stored in memory by the running server and is reset when the application stops.
 - The frontend chat is stored in browser `sessionStorage`, so it survives refreshes but is cleared when the browser session ends or a new document is uploaded.
-- Embeddings use Gemini `gemini-embedding-001`, with Jina `jina-embeddings-v3`
-  as the automatic fallback. Embeddings are cached in `.cache/embedding_cache.sqlite3`.
-- Both providers are configured to return 384-dimensional vectors for the existing
-  pgvector column. Do not mix providers for the same indexed corpus without re-indexing.
+- Generation is sent only to the configured local endpoint. Embeddings use the
+  provider selected in `.env` and are cached in `.cache/embedding_cache.sqlite3`.
+- The selected embedding model must return 384-dimensional vectors for the
+  existing pgvector column. Re-index documents after changing providers.
 - Large-document summaries make multiple LLM requests and may take longer than short documents.

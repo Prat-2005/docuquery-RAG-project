@@ -60,19 +60,19 @@ const CodeBlock = ({ language, code }) => {
   };
 
   return (
-    <div className="my-3 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 text-slate-100 shadow-md">
-      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-4 py-1.5 text-xs text-slate-400">
-        <span className="font-mono uppercase">{language}</span>
+    <div className="my-3.5 overflow-hidden rounded-2xl theme-well border border-slate-700/50 text-slate-100 shadow-sm">
+      <div className="flex items-center justify-between border-b border-slate-700/40 bg-slate-900/60 px-4 py-2 text-xs text-slate-400">
+        <span className="font-mono font-semibold uppercase tracking-wider">{language}</span>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1.5 rounded px-2 py-1 transition hover:bg-slate-800 hover:text-slate-200"
+          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 transition hover:bg-slate-800 hover:text-slate-100"
           title="Copy code"
         >
           {copied ? (
             <>
               <Check className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="text-emerald-400">Copied</span>
+              <span className="text-emerald-400 font-semibold">Copied</span>
             </>
           ) : (
             <>
@@ -82,7 +82,7 @@ const CodeBlock = ({ language, code }) => {
           )}
         </button>
       </div>
-      <pre className="overflow-x-auto p-4 font-mono text-xs leading-5">
+      <pre className="overflow-x-auto p-4 font-mono text-xs leading-5 bg-slate-950/40">
         <code>{code}</code>
       </pre>
     </div>
@@ -100,7 +100,7 @@ const TextBlock = ({ text }) => {
 
         if (isList) {
           return (
-            <ul key={pIndex} className="my-2 space-y-1.5 pl-5 list-disc marker:text-indigo-500">
+            <ul key={pIndex} className="my-2.5 space-y-1.5 pl-5 list-disc marker:text-indigo-500">
               {lines.map((line, lIndex) => {
                 const cleanLine = line.trim().replace(/^[-*]\s+|\d+\.\s+/, '');
                 return <li key={lIndex}>{formatInlineText(cleanLine)}</li>;
@@ -157,14 +157,14 @@ const formatInlineText = (text) => {
       tokens.push(
         <code
           key={match.index}
-          className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-indigo-700 border border-slate-200"
+          className="rounded-lg bg-indigo-50 px-2 py-0.5 font-mono text-xs text-indigo-700 border border-indigo-200/40"
         >
           {token.slice(1, -1)}
         </code>
       );
     } else if (token.startsWith('**') && token.endsWith('**')) {
       tokens.push(
-        <strong key={match.index} className="font-semibold text-slate-900">
+        <strong key={match.index} className="font-bold text-slate-900">
           {token.slice(2, -2)}
         </strong>
       );

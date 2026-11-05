@@ -73,7 +73,7 @@ class UserSettings(Base):
         primary_key=True,
     )
 
-    llm_provider: Mapped[str] = mapped_column(String(50), server_default="openai")
+    llm_provider: Mapped[str] = mapped_column(String(50), server_default="local")
     llm_model: Mapped[str] = mapped_column(String(100), nullable=True)
     api_base_url: Mapped[str | None] = mapped_column(Text)
     api_key_masked: Mapped[str | None] = mapped_column(String(255)) # Stores masked version or pointer

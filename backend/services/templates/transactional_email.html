@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 14px; border-radius: 9999px; margin-bottom: 20px; }
+    .badge-security { background-color: #fee2e2; color: #b91c1c; }
+    .badge-activation { background-color: #e0e7ff; color: #4338ca; }
+  </style>
+  <title>$title</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f1f5f9; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 580px; background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05); overflow: hidden;">
+          <tr>
+            <td style="padding: 32px 36px 24px 36px; background-color: #ffffff; border-bottom: 1px solid #f1f5f9;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="56" valign="middle">
+                    <img src="cid:docuquery_logo" alt="DocuQuery AI Logo" width="52" height="52" style="display: block; border-radius: 12px; border: 0; outline: none;" />
+                  </td>
+                  <td valign="middle" style="padding-left: 14px;">
+                    <span style="font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; display: block; line-height: 1.2;">DocuQuery AI</span>
+                    <span style="font-size: 11px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-top: 2px;">Document Intelligence Platform</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 36px;">
+              <div class="badge $badge_class">
+                $badge_text
+              </div>
+              <h1 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1.3; letter-spacing: -0.02em;">
+                $title
+              </h1>
+              <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569;">
+                $intro_p
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 30px 0 32px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="$quoted_url" style="display: inline-block; background: #4f46e5; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-align: center; text-decoration: none; font-weight: 700; font-size: 15px; padding: 15px 36px; border-radius: 12px; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.35); letter-spacing: -0.01em;">
+                      $button_label &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-left: 4px solid #6366f1; border-radius: 8px; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 16px 18px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
+                      $notice_title
+                    </div>
+                    <div style="font-size: 13px; line-height: 1.5; color: #64748b;">
+                      $notice_text
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 24px 0; font-size: 13px; line-height: 1.5; color: #94a3b8;">
+                $secondary_note
+              </p>
+              <div style="padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">
+                  Button not working? Copy and paste this URL into your browser:
+                </p>
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; color: #475569; word-break: break-all; line-height: 1.4;">
+                  $quoted_url
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px 36px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #64748b;">
+                DocuQuery AI &bull; Next-Gen Retrieval-Augmented Generation
+              </p>
+              <p style="margin: 0; font-size: 11px; color: #94a3b8;">
+                &copy; $current_year DocuQuery AI. This is an automated message, please do not reply directly.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

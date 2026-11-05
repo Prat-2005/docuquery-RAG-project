@@ -57,56 +57,56 @@ const ResetPasswordPage = () => {
 
   return (
     <PageWrapper>
-      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12 bg-slate-50">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="p-8">
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full theme-card rounded-3xl overflow-hidden p-8 sm:p-10">
+          <div>
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-slate-900">Set New Password</h1>
-              <p className="text-slate-500 mt-2">Create a strong password to secure your account</p>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Set New Password</h1>
+              <p className="text-slate-500 mt-2 text-sm">Create a strong password to secure your account</p>
             </div>
 
             {status === 'success' ? (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="w-10 h-10" />
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
+                  <CheckCircle2 className="w-9 h-9" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">Password Reset Successful</h2>
-                <p className="text-slate-600 mb-8">
+                <h2 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">Password Reset Successful</h2>
+                <p className="text-slate-600 mb-8 text-sm">
                   Your password has been changed successfully. You can now sign in with your new password.
                 </p>
                 <Link
                   to="/login"
-                  className="w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all block text-center"
+                  className="w-full py-3.5 px-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all block text-center shadow-md active:scale-95"
                 >
                   Go to Login
                 </Link>
               </div>
             ) : status === 'expired' ? (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AlertCircle className="w-10 h-10" />
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
+                  <AlertCircle className="w-9 h-9" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">Reset Link Expired</h2>
-                <p className="text-slate-600 mb-8">
+                <h2 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">Reset Link Expired</h2>
+                <p className="text-slate-600 mb-8 text-sm">
                   {error || 'This password reset link is invalid or has already been used.'}
                   {' '}Request a new link to reset your password.
                 </p>
                 <Link
                   to="/forgot-password"
-                  className="w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all block text-center"
+                  className="w-full py-3.5 px-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all block text-center shadow-md active:scale-95"
                 >
                   Request New Reset Link
                 </Link>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">New Password</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                      className="w-full px-4 py-3 pr-12 rounded-2xl border border-slate-300 outline-none transition-all"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -115,23 +115,23 @@ const ResetPasswordPage = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? 'Hide new password' : 'Show new password'}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-slate-400">
                     Use at least 8 characters with a letter and a number.
                   </p>
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Confirm New Password</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       required
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                      className="w-full px-4 py-3 pr-12 rounded-2xl border border-slate-300 outline-none transition-all"
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -140,7 +140,7 @@ const ResetPasswordPage = () => {
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -148,7 +148,7 @@ const ResetPasswordPage = () => {
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-600 text-sm border border-red-100">
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 text-red-600 text-sm border border-red-100">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <span>{error}</span>
                   </div>
@@ -157,7 +157,7 @@ const ResetPasswordPage = () => {
                 <button
                   type="submit"
                   disabled={isLoading || !token}
-                  className="w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-70 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-md disabled:opacity-70 flex items-center justify-center gap-2 active:scale-95"
                 >
                   {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Password'}
                 </button>

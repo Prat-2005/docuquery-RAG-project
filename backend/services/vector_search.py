@@ -8,6 +8,7 @@ from backend.db.models import (
     ConversationDocument,
     Document,
     DocumentChunk,
+    UserSettings,
 )
 from backend.services.document_retriever import DocumentRetriever
 
@@ -26,7 +27,19 @@ def search_conversation_chunks(
         raise ValueError("top_k must be greater than zero")
 
     print("Retrieval: creating the question embedding...", flush=True)
-    query_embedding = DocumentRetriever().embed([question])[0]
+    settings = db.scalar(
+        select(UserSettings).where(UserSettings.user_id == user_id)
+    )
+    retriever_settings = (
+        {
+            "llm_provider": settings.llm_provider,
+            "llm_model": settings.llm_model,
+            "api_base_url": settings.api_base_url,
+        }
+        if settings
+        else None
+    )
+    query_embedding = DocumentRetriever(retriever_settings).embed([question])[0]
     print("Retrieval: question embedding ready; querying PostgreSQL...", flush=True)
 
     statement = (

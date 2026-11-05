@@ -1,6 +1,7 @@
 import docx
 import fitz
 
+from collections.abc import Mapping
 from pathlib import Path
 
 from backend.services.ai_client import AIClient
@@ -15,10 +16,10 @@ class RetrieverError(Exception):
 
 
 class DocumentRetriever:
-    def __init__(self):
+    def __init__(self, settings: Mapping[str, object] | None = None):
         self.content = ""
         self.chunks = []
-        self.ai_client = AIClient()
+        self.ai_client = AIClient(settings)
 
     def upload(self, document: str | Path):
         extension = Path(document).suffix.lower()

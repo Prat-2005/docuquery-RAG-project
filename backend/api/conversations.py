@@ -34,10 +34,19 @@ from datetime import datetime, timezone
 from backend.services.chat_generation import GenerativeGPT
 
 router = APIRouter(tags=["Conversations"])
-generator = GenerativeGPT()
 _active_requests: dict[str, Event] = {}
 _cancelled_request_ids: dict[str, float] = {}
 _active_requests_lock = Lock()
+
+
+def _settings_values(settings: UserSettings | None) -> dict[str, object] | None:
+    if settings is None:
+        return None
+    return {
+        "llm_provider": settings.llm_provider,
+        "llm_model": settings.llm_model,
+        "api_base_url": settings.api_base_url,
+    }
 
 
 def _register_request(request_id: str) -> Event:
@@ -84,7 +93,7 @@ def _raise_if_cancelled(cancellation: Event) -> None:
 class QuestionRequest(BaseModel):
     question: str
     improv_answer: str | None = None
-    top_k: int = Field(default=3, gt=0, le=50)
+    top_k: int | None = Field(default=None, gt=0, le=50)
 
 def get_context(
     conversation_id: UUID,
@@ -295,6 +304,10 @@ def create_conversation_message(
         .where(Message.conversation_id == conversation_id)
         .order_by(Message.created_at.asc())
     ).all()
+    user_settings = db.scalar(
+        select(UserSettings).where(UserSettings.user_id == current_user.id)
+    )
+    generator = GenerativeGPT(_settings_values(user_settings))
 
     conversation_history = "\n".join(
         f"{message.role.capitalize()}: {message.content}"
@@ -308,7 +321,7 @@ def create_conversation_message(
             question=message_data.content,
             current_user=current_user,
             db=db,
-            top_k=3,
+            top_k=user_settings.top_k if user_settings else 3,
         )
 
         combined_context = (
@@ -447,7 +460,11 @@ def retrieve_context(
         question=request.question,
         user_id=current_user.id,
         db=db,
-        top_k=request.top_k,
+        top_k=request.top_k
+        or db.scalar(
+            select(UserSettings.top_k).where(UserSettings.user_id == current_user.id)
+        )
+        or 3,
     )
 
     if not chunks:
@@ -505,12 +522,16 @@ def generate_answer(
         )
 
     try:
+        user_settings = db.scalar(
+            select(UserSettings).where(UserSettings.user_id == current_user.id)
+        )
+        generator = GenerativeGPT(_settings_values(user_settings))
         context = get_context(
             conversation_id=conversation_id,
             question=request.question,
             current_user=current_user,
             db=db,
-            top_k=request.top_k,
+            top_k=request.top_k or (user_settings.top_k if user_settings else 3),
         )
 
         answer = generator.generate(
@@ -567,12 +588,16 @@ def regenerate_answer(
         )
 
     try:
+        user_settings = db.scalar(
+            select(UserSettings).where(UserSettings.user_id == current_user.id)
+        )
+        generator = GenerativeGPT(_settings_values(user_settings))
         context = get_context(
             conversation_id=conversation_id,
             question=request.question,
             current_user=current_user,
             db=db,
-            top_k=request.top_k,
+            top_k=request.top_k or (user_settings.top_k if user_settings else 3),
         )
 
         answer = generator.regenerate(

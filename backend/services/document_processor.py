@@ -10,6 +10,7 @@ from backend.db.models import (
     ConversationDocument,
     Document,
     DocumentChunk,
+    UserSettings,
 )
 from backend.services.document_retriever import DocumentRetriever
 from backend.services.data_storage import save_uploaded_files
@@ -20,9 +21,21 @@ def process_document(document: Document, db: Session) -> None:
     db.commit()
 
     try:
-        retriever = DocumentRetriever()
+        settings = db.scalar(
+            select(UserSettings).where(UserSettings.user_id == document.user_id)
+        )
+        retriever = DocumentRetriever(
+            {
+                "llm_provider": settings.llm_provider if settings else None,
+                "llm_model": settings.llm_model if settings else None,
+                "api_base_url": settings.api_base_url if settings else None,
+            }
+        )
         retriever.upload(document.storage_path)
-        retriever.chunk()
+        retriever.chunk(
+            chunk_size=settings.chunk_size if settings else 1000,
+            chunk_overlap=settings.chunk_overlap if settings else 200,
+        )
 
         embeddings = retriever.embed(retriever.chunks)
 

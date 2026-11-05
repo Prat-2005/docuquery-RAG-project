@@ -3,75 +3,575 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+    --theme-bg: #eef2f7;
+    --theme-surface: #f9fbfe;
+    --theme-surface-elevated: #ffffff;
+    --theme-surface-sunken: #e2e8f1;
+    --theme-text-primary: #1e293b;
+    --theme-text-secondary: #475569;
+    --theme-text-muted: #64748b;
+    --theme-border: rgba(255, 255, 255, 0.85);
+    --theme-border-subtle: rgba(160, 175, 202, 0.28);
+    --theme-primary: #6366f1;
+    --theme-primary-hover: #4f46e5;
+
+    /* Claymorphism Light variables */
+    --clay-card-shadow: 10px 10px 24px rgba(160, 175, 202, 0.45),
+                        -8px -8px 20px rgba(255, 255, 255, 0.95),
+                        inset 2.5px 2.5px 5px rgba(255, 255, 255, 0.95),
+                        inset -2.5px -2.5px 5px rgba(160, 175, 202, 0.22);
+
+    --clay-card-flat: 6px 6px 14px rgba(160, 175, 202, 0.35),
+                      -6px -6px 14px rgba(255, 255, 255, 0.9),
+                      inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.9),
+                      inset -1.5px -1.5px 3px rgba(160, 175, 202, 0.15);
+
+    --clay-pop-shadow: 14px 14px 32px rgba(150, 168, 198, 0.5),
+                       -12px -12px 28px rgba(255, 255, 255, 0.98),
+                       inset 3px 3px 6px rgba(255, 255, 255, 0.95),
+                       inset -3px -3px 6px rgba(150, 168, 198, 0.28);
+
+    --clay-inset-shadow: inset 4px 4px 8px rgba(150, 168, 198, 0.35),
+                         inset -4px -4px 8px rgba(255, 255, 255, 0.95);
+
+    --clay-btn-primary: 6px 6px 14px rgba(99, 102, 241, 0.4),
+                        -4px -4px 10px rgba(255, 255, 255, 0.9),
+                        inset 2px 2px 4px rgba(255, 255, 255, 0.45),
+                        inset -2px -2px 4px rgba(49, 46, 129, 0.35);
+
+    --clay-btn-primary-active: inset 4px 4px 8px rgba(49, 46, 129, 0.55),
+                              inset -3px -3px 6px rgba(255, 255, 255, 0.25);
+  }
+
+  html.dark {
+    color-scheme: dark;
+    --theme-bg: #1a1e24;
+    --theme-surface: #1e232b;
+    --theme-surface-elevated: #232832;
+    --theme-surface-sunken: #15181d;
+    --theme-text-primary: #f1f5f9;
+    --theme-text-secondary: #cbd5e1;
+    --theme-text-muted: #8b99ad;
+    --theme-border: rgba(255, 255, 255, 0.05);
+    --theme-border-subtle: rgba(255, 255, 255, 0.03);
+    --theme-primary: #6366f1;
+    --theme-primary-hover: #4f46e5;
+
+    /* Neomorphism Dark variables */
+    --neo-card-shadow: 7px 7px 16px #111419,
+                       -6px -6px 14px #232933;
+
+    --neo-card-flat: 4px 4px 10px #12151a,
+                     -4px -4px 10px #222731;
+
+    --neo-pop-shadow: 10px 10px 24px #0e1115,
+                      -8px -8px 20px #262c37;
+
+    --neo-inset-shadow: inset 4px 4px 9px #12151a,
+                        inset -4px -4px 9px #242a34;
+
+    --neo-btn-primary: 5px 5px 14px #101217,
+                       -4px -4px 10px #262c37,
+                       0 0 16px rgba(99, 102, 241, 0.35);
+
+    --neo-btn-primary-active: inset 3px 3px 6px #312e81,
+                             inset -2px -2px 5px rgba(255, 255, 255, 0.15);
+  }
+
   body {
-    @apply transition-colors duration-200;
+    @apply transition-colors duration-200 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
+/* =========================================================================
+   LIGHT MODE: CLAYMORPHISM LIGHT
+   Inflated 3D tactile pillowy elements with dual inner bevels and outer soft drops
+   ========================================================================= */
+
+html:not(.dark) body {
+  background: var(--theme-bg);
+  color: var(--theme-text-primary);
+}
+
+/* Background layers */
+html:not(.dark) .bg-slate-50,
+html:not(.dark) [class*="bg-slate-50"] {
+  background-color: var(--theme-bg);
+}
+
+html:not(.dark) .bg-white,
+html:not(.dark) [class*="bg-white"] {
+  background-color: var(--theme-surface);
+}
+
+html:not(.dark) .bg-slate-100,
+html:not(.dark) [class*="bg-slate-100"] {
+  background-color: var(--theme-surface-elevated);
+}
+
+html:not(.dark) .bg-indigo-50,
+html:not(.dark) [class*="bg-indigo-50"] {
+  background-color: #eef2ff;
+}
+
+html:not(.dark) .bg-emerald-50 {
+  background-color: #ecfdf5;
+}
+
+html:not(.dark) .bg-red-50 {
+  background-color: #fef2f2;
+}
+
+/* Borders */
+html:not(.dark) .border-slate-100,
+html:not(.dark) .border-slate-200,
+html:not(.dark) .border-slate-300,
+html:not(.dark) .border-indigo-100,
+html:not(.dark) .border-indigo-200 {
+  border-color: var(--theme-border-subtle);
+}
+
+/* Typography */
+html:not(.dark) .text-slate-900,
+html:not(.dark) .text-slate-800,
+html:not(.dark) .text-slate-700 {
+  color: var(--theme-text-primary);
+}
+
+html:not(.dark) .text-slate-600,
+html:not(.dark) .text-slate-500 {
+  color: var(--theme-text-secondary);
+}
+
+html:not(.dark) .text-slate-400 {
+  color: var(--theme-text-muted);
+}
+
+/* Claymorphism Shadows */
+html:not(.dark) .shadow-sm,
+html:not(.dark) .shadow-xs,
+html:not(.dark) .shadow-2xs {
+  box-shadow: var(--clay-card-flat);
+}
+
+html:not(.dark) .shadow-md,
+html:not(.dark) .shadow-lg,
+html:not(.dark) .shadow-xl,
+html:not(.dark) .shadow-2xl {
+  box-shadow: var(--clay-card-shadow);
+}
+
+html:not(.dark) .shadow-inner {
+  box-shadow: var(--clay-inset-shadow);
+}
+
+/* Inputs, textareas, selects */
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
+  border-color: var(--theme-border-subtle);
+  background-color: #f6f8fc;
+  color: var(--theme-text-primary);
+  box-shadow: var(--clay-inset-shadow);
+  transition: all 0.2s ease;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #94a3b8;
+}
+
+html:not(.dark) input:focus,
+html:not(.dark) select:focus,
+html:not(.dark) textarea:focus {
+  border-color: #818cf8;
+  background-color: #ffffff;
+  box-shadow: inset 3px 3px 6px rgba(160, 175, 202, 0.3),
+              inset -3px -3px 6px rgba(255, 255, 255, 0.95),
+              0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+
+/* Claymorphism Primary Buttons */
+html:not(.dark) button.bg-indigo-600,
+html:not(.dark) a.bg-indigo-600 {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  box-shadow: var(--clay-btn-primary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html:not(.dark) button.bg-indigo-600:hover,
+html:not(.dark) a.bg-indigo-600:hover {
+  transform: translateY(-1px);
+  box-shadow: 8px 8px 18px rgba(99, 102, 241, 0.45),
+              -5px -5px 12px rgba(255, 255, 255, 0.95),
+              inset 2px 2px 4px rgba(255, 255, 255, 0.5),
+              inset -2px -2px 4px rgba(49, 46, 129, 0.35);
+}
+
+html:not(.dark) button.bg-indigo-600:active,
+html:not(.dark) a.bg-indigo-600:active {
+  transform: translateY(1px);
+  box-shadow: var(--clay-btn-primary-active);
+}
+
+/* Clay Cards & Surfaces */
+html:not(.dark) .clay-card {
+  background: var(--theme-surface);
+  box-shadow: var(--clay-card-shadow);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 1.25rem;
+}
+
+html:not(.dark) .clay-pop {
+  background: var(--theme-surface-elevated);
+  box-shadow: var(--clay-pop-shadow);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  border-radius: 1.5rem;
+}
+
+html:not(.dark) .clay-inset {
+  background: var(--theme-surface-sunken);
+  box-shadow: var(--clay-inset-shadow);
+  border-radius: 1rem;
+}
+
+/* =========================================================================
+   DARK MODE: NEOMORPHISM DARK (SOFT UI)
+   Extruded smooth charcoal surfaces, top-left highlight + bottom-right shadow
+   ========================================================================= */
+
 html.dark body {
-  @apply bg-slate-950 text-slate-100;
+  background-color: var(--theme-bg);
+  color: var(--theme-text-primary);
 }
 
-html.dark .bg-slate-50 {
-  @apply bg-slate-950;
+/* Dark Neomorphic backgrounds */
+html.dark .bg-slate-50,
+html.dark [class*="bg-slate-50"],
+html.dark .bg-slate-950 {
+  background-color: var(--theme-bg);
 }
 
-html.dark .bg-white {
-  @apply bg-slate-900;
+html.dark .bg-white,
+html.dark [class*="bg-white"],
+html.dark .bg-slate-900 {
+  background-color: var(--theme-surface);
 }
 
-html.dark .bg-indigo-50 {
-  @apply bg-slate-800;
+html.dark .bg-slate-100,
+html.dark [class*="bg-slate-100"] {
+  background-color: var(--theme-surface-elevated);
 }
 
-html.dark .border-indigo-100 {
-  @apply border-slate-700;
+html.dark .bg-indigo-50,
+html.dark [class*="bg-indigo-50"] {
+  background-color: #232938;
 }
 
-html.dark .text-slate-900 {
-  @apply text-slate-100;
+html.dark .bg-emerald-50 {
+  background-color: #172822;
 }
 
+html.dark .bg-red-50 {
+  background-color: #2d1b1d;
+}
+
+/* Dark Borders */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-slate-700,
+html.dark .border-slate-800,
+html.dark .border-indigo-100,
+html.dark .border-indigo-200 {
+  border-color: var(--theme-border);
+}
+
+/* Dark Typography */
+html.dark .text-slate-900,
 html.dark .text-slate-800,
 html.dark .text-slate-700 {
-  @apply text-slate-200;
+  color: var(--theme-text-primary);
 }
 
 html.dark .text-slate-600,
 html.dark .text-slate-500 {
-  @apply text-slate-400;
+  color: var(--theme-text-secondary);
 }
 
-html.dark .bg-indigo-50 .text-slate-900 {
-  @apply text-slate-100;
+html.dark .text-slate-400 {
+  color: var(--theme-text-muted);
 }
 
-html.dark .bg-indigo-50 .text-slate-600 {
-  @apply text-slate-300;
+/* Neomorphic Shadows */
+html.dark .shadow-sm,
+html.dark .shadow-xs,
+html.dark .shadow-2xs {
+  box-shadow: var(--neo-card-flat);
 }
 
-html.dark .border-slate-200,
-html.dark .border-slate-300 {
-  @apply border-slate-700;
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .shadow-2xl {
+  box-shadow: var(--neo-card-shadow);
 }
 
+html.dark .shadow-inner {
+  box-shadow: var(--neo-inset-shadow);
+}
+
+/* Neomorphic Dark Inputs */
 html.dark input,
-html.dark select {
-  @apply border-slate-700 bg-slate-800 text-slate-100;
+html.dark select,
+html.dark textarea {
+  border-color: rgba(255, 255, 255, 0.05);
+  background-color: #171a20;
+  color: var(--theme-text-primary);
+  box-shadow: var(--neo-inset-shadow);
+  transition: all 0.2s ease;
 }
 
-html.dark .hover\:bg-slate-50:hover {
-  @apply bg-slate-800;
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b;
 }
 
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: rgba(129, 140, 248, 0.6);
+  background-color: #16181f;
+  box-shadow: inset 3px 3px 7px #101217,
+              inset -3px -3px 7px #232833,
+              0 0 0 3px rgba(99, 102, 241, 0.22);
+}
+
+/* Neomorphic Buttons */
+html.dark button.bg-indigo-600,
+html.dark a.bg-indigo-600 {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  box-shadow: var(--neo-btn-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html.dark button.bg-indigo-600:hover,
+html.dark a.bg-indigo-600:hover {
+  transform: translateY(-1px);
+  box-shadow: 7px 7px 18px #0f1115,
+              -5px -5px 12px #282f3a,
+              0 0 20px rgba(99, 102, 241, 0.45);
+}
+
+html.dark button.bg-indigo-600:active,
+html.dark a.bg-indigo-600:active {
+  transform: translateY(1px);
+  box-shadow: var(--neo-btn-primary-active);
+}
+
+/* Extruded Neomorphic Dark Cards & Surfaces */
+html.dark .neo-card {
+  background: var(--theme-surface);
+  box-shadow: var(--neo-card-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 1.25rem;
+}
+
+html.dark .neo-pop {
+  background: var(--theme-surface-elevated);
+  box-shadow: var(--neo-pop-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.5rem;
+}
+
+html.dark .neo-inset {
+  background: var(--theme-surface-sunken);
+  box-shadow: var(--neo-inset-shadow);
+  border-radius: 1rem;
+}
+
+/* =========================================================================
+   COMMON THEME UTILITIES
+   Adaptive styles that instantly switch between Clay and Neo
+   ========================================================================= */
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border-subtle);
+  box-shadow: var(--clay-card-flat);
+}
+
+html.dark .theme-toggle-btn {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  box-shadow: var(--neo-card-flat);
+}
+
+.theme-toggle-btn:hover {
+  transform: translateY(-1px);
+}
+
+.theme-toggle-btn:active {
+  transform: translateY(1px);
+}
+
+/* App Header & Nav */
+.theme-header {
+  background: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border-subtle);
+  box-shadow: 0 4px 16px rgba(160, 175, 202, 0.15);
+}
+
+html.dark .theme-header {
+  background: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Adaptive Card */
+.theme-card {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border-subtle);
+  box-shadow: var(--clay-card-shadow);
+  border-radius: 1.25rem;
+  transition: all 0.25s ease;
+}
+
+html.dark .theme-card {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  box-shadow: var(--neo-card-shadow);
+}
+
+/* Adaptive Sunken Well / Inset Container */
+.theme-well {
+  background: var(--theme-surface-sunken);
+  box-shadow: var(--clay-inset-shadow);
+  border-radius: 1rem;
+  transition: all 0.25s ease;
+}
+
+html.dark .theme-well {
+  background: #171a20;
+  box-shadow: var(--neo-inset-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Adaptive Interactive Item (Sidebar list item, dropdown, prompt cards) */
+.theme-item {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border-subtle);
+  box-shadow: var(--clay-card-flat);
+  border-radius: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.theme-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 8px 8px 18px rgba(160, 175, 202, 0.4), -6px -6px 14px rgba(255, 255, 255, 0.95);
+}
+
+.theme-item-active {
+  background: #eef2ff !important;
+  box-shadow: inset 2px 2px 5px rgba(99, 102, 241, 0.25), inset -2px -2px 5px rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}
+
+html.dark .theme-item {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  box-shadow: var(--neo-card-flat);
+}
+
+html.dark .theme-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 6px 6px 14px #101217, -5px -5px 12px #262c37;
+}
+
+html.dark .theme-item-active {
+  background: #232938 !important;
+  box-shadow: inset 3px 3px 7px #12151b, inset -3px -3px 7px #252c38 !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+}
+
+/* Chat Message Bubbles */
+.chat-bubble-user {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  box-shadow: 6px 6px 16px rgba(99, 102, 241, 0.35),
+              -3px -3px 8px rgba(255, 255, 255, 0.7),
+              inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+              inset -2px -2px 4px rgba(49, 46, 129, 0.35);
+  border-radius: 1.25rem;
+  border-top-right-radius: 0.25rem;
+}
+
+html.dark .chat-bubble-user {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  box-shadow: 5px 5px 14px #101217,
+              -4px -4px 10px #262c37,
+              0 0 16px rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.chat-bubble-assistant {
+  background: var(--theme-surface);
+  color: var(--theme-text-primary);
+  box-shadow: var(--clay-card-shadow);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 1.25rem;
+  border-top-left-radius: 0.25rem;
+}
+
+html.dark .chat-bubble-assistant {
+  background: var(--theme-surface);
+  color: var(--theme-text-primary);
+  box-shadow: var(--neo-card-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Keyframes */
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;

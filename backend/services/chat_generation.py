@@ -1,8 +1,10 @@
+from typing import Mapping
+
 from backend.services.ai_client import AIClient
 
 class GenerativeGPT:
 
-    def __init__(self):
+    def __init__(self, settings: Mapping[str, object] | None = None):
         self.system_prompt = (
             "You are a document reader. " \
             "Your task is to help users answer questions about their uploaded documents. " \
@@ -12,7 +14,7 @@ class GenerativeGPT:
             "If the answer is not in the context, say you do not know or no information "
             "available for this query."                  
         )
-        self.ai_client = AIClient()
+        self.ai_client = AIClient(settings)
         self.answer = ""
 
     def generate(self, context: str, question: str) -> str:
@@ -50,8 +52,8 @@ class GenerativeGPT:
             f"Document context:\n{context}\n\n"
             f"Question:\n{question}\n\n"
             f"Previous answer:\n{previous_answer}\n\n"
-            "Improve the previous answer using only the context. OR Find "
-            "your own relevance from your trained data or research."
+            "Improve the previous answer using only the provided context. "
+            "Do not use outside knowledge."
         )
         self.answer = self.ai_client.generate(prompt)
         return self.answer

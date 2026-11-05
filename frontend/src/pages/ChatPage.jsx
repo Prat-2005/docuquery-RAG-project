@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import ChatSidebar from '../components/chat/ChatSidebar';
 import DocumentWorkspace from '../components/documents/DocumentWorkspace';
 import MarkdownRenderer from '../components/chat/MarkdownRenderer';
+import ThemeToggle from '../components/common/ThemeToggle';
 
 const getErrorMessage = (error, fallback) => {
   const detail = error.response?.data?.detail;
@@ -418,7 +419,7 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--theme-bg)] text-[var(--theme-text-primary)] font-sans transition-colors duration-200">
       {/* 1. Left Sidebar: Conversation Management */}
       <ChatSidebar
         conversations={conversations}
@@ -434,44 +435,45 @@ const ChatPage = () => {
       />
 
       {/* 2. Center Panel: Chat Interface */}
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-slate-50/50">
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--theme-bg)] transition-colors duration-200">
         {/* Workspace Top Header */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
+        <header className="theme-header flex h-16 shrink-0 items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setIsSidebarOpen(true)}
-              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
+              className="rounded-xl p-2 text-slate-500 hover:bg-slate-100/60 lg:hidden"
               aria-label="Open sidebar"
             >
               <Menu className="h-5 w-5" />
             </button>
             <div className="min-w-0">
-              <h1 className="truncate text-base font-bold text-slate-900">
+              <h1 className="truncate text-base font-extrabold text-slate-900 tracking-tight">
                 {selectedConversation?.title || 'DocuQuery AI Workspace'}
               </h1>
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <span>RAG Chat</span>
                 <span>•</span>
                 {documents.length > 0 ? (
-                  <span className="text-emerald-600 font-medium">
+                  <span className="text-emerald-600 font-semibold">
                     {documents.length} {documents.length === 1 ? 'document' : 'documents'} ready
                   </span>
                 ) : (
-                  <span className="text-amber-600 font-medium">No documents attached</span>
+                  <span className="text-amber-500 font-semibold">No documents attached</span>
                 )}
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <button
               type="button"
               onClick={() => setIsDocPanelOpen(!isDocPanelOpen)}
-              className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+              className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${
                 isDocPanelOpen
-                  ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'theme-item-active text-indigo-700 font-bold'
+                  : 'theme-item text-slate-600'
               }`}
               title="Toggle Document Workspace"
             >
@@ -481,7 +483,7 @@ const ChatPage = () => {
                 <PanelRightOpen className="h-4 w-4" />
               )}
               <span className="hidden sm:inline">Documents</span>
-              <span className="rounded-full bg-indigo-100 px-1.5 py-0.2 text-[10px] font-bold text-indigo-700">
+              <span className="rounded-full bg-indigo-100/80 px-1.5 py-0.2 text-[10px] font-bold text-indigo-700">
                 {documents.length}
               </span>
             </button>
@@ -518,10 +520,10 @@ const ChatPage = () => {
           ) : documents.length === 0 ? (
             /* Empty State: No Documents Attached */
             <div className="mx-auto flex h-full max-w-xl flex-col items-center justify-center text-center">
-              <div className="mb-4 rounded-2xl bg-indigo-50 border border-indigo-100 p-4 text-indigo-600">
+              <div className="theme-card mb-4 p-5 text-indigo-600 rounded-3xl">
                 <FileText className="h-10 w-10 text-indigo-600" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">Add documents to get started</h2>
+              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Add documents to get started</h2>
               <p className="mt-2 max-w-md text-xs sm:text-sm text-slate-500 leading-relaxed">
                 DocuQuery AI answers questions strictly grounded in your files. Upload your PDF, DOCX, or TXT documents below or in the right panel.
               </p>
@@ -542,7 +544,7 @@ const ChatPage = () => {
                   type="button"
                   onClick={() => quickFileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-indigo-300 bg-white p-6 text-sm font-semibold text-indigo-600 shadow-xs transition hover:border-indigo-500 hover:bg-indigo-50/30"
+                  className="theme-well flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-indigo-400/60 p-6 text-sm font-bold text-indigo-600 transition hover:border-indigo-500 hover:scale-[1.01]"
                 >
                   {isUploading ? (
                     <>
@@ -561,25 +563,25 @@ const ChatPage = () => {
           ) : messages.length === 0 ? (
             /* Empty State: Documents uploaded, ready to chat */
             <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center text-center">
-              <div className="mb-3 rounded-2xl bg-emerald-50 border border-emerald-100 p-3 text-emerald-600">
-                <Sparkles className="h-8 w-8" />
+              <div className="theme-card mb-3 p-4 text-emerald-600 rounded-2xl">
+                <Sparkles className="h-8 w-8 text-emerald-500" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">This conversation is ready</h2>
+              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">This conversation is ready</h2>
               <p className="mt-1 text-xs text-slate-500">
                 {documents.length} document{documents.length > 1 ? 's' : ''} indexed. Ask any question below or try a prompt:
               </p>
 
               {/* Prompt Suggestions */}
-              <div className="mt-6 grid w-full gap-2.5 sm:grid-cols-3">
+              <div className="mt-6 grid w-full gap-3 sm:grid-cols-3">
                 {SUGGESTED_PROMPTS.map((promptText, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => handleSendMessage(promptText)}
-                    className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3.5 text-left text-xs text-slate-700 shadow-2xs transition hover:border-indigo-400 hover:bg-indigo-50/20 hover:text-indigo-900"
+                    className="theme-item flex flex-col justify-between p-4 text-left text-xs text-slate-700 transition hover:scale-[1.02]"
                   >
-                    <span>{promptText}</span>
-                    <span className="mt-3 text-[11px] font-semibold text-indigo-600">Ask this →</span>
+                    <span className="font-medium leading-relaxed">{promptText}</span>
+                    <span className="mt-3 text-[11px] font-bold text-indigo-600">Ask this →</span>
                   </button>
                 ))}
               </div>
@@ -592,41 +594,41 @@ const ChatPage = () => {
                 return (
                   <div
                     key={message.id}
-                    className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
+                    className={`flex gap-3.5 ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
                     {!isUser && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-sm">
                         <Sparkles className="h-4 w-4" />
                       </div>
                     )}
 
                     <div
-                      className={`relative group max-w-[85%] sm:max-w-[78%] rounded-2xl px-5 py-4 text-sm leading-relaxed shadow-xs ${
+                      className={`relative group max-w-[85%] sm:max-w-[78%] px-5 py-4 text-sm leading-relaxed ${
                         isUser
-                          ? 'rounded-tr-none bg-indigo-600 text-white'
-                          : 'rounded-tl-none border border-slate-200 bg-white text-slate-800'
+                          ? 'chat-bubble-user'
+                          : 'chat-bubble-assistant'
                       }`}
                     >
                       {isUser ? (
                         <p className="whitespace-pre-wrap">{message.content}</p>
                       ) : message.pending ? (
-                        <div className="flex items-center gap-2 text-slate-500">
+                        <div className="flex items-center gap-2.5 text-slate-500 py-1">
                           <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
-                          <span>Searching documents and generating an answer...</span>
+                          <span className="text-xs font-medium">Searching documents and generating an answer...</span>
                         </div>
                       ) : (
                         <MarkdownRenderer content={message.content} />
                       )}
 
                       {!isUser && !message.pending && (
-                        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2 text-[11px] text-slate-400">
-                          <span>Grounded by DocuQuery AI</span>
-                          <div className="flex items-center gap-1">
+                        <div className="mt-3.5 flex items-center justify-between border-t border-slate-200/50 pt-2 text-[11px] text-slate-400">
+                          <span className="font-medium">Grounded by DocuQuery AI</span>
+                          <div className="flex items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => handleRegenerateMessage(message, messageIndex)}
                               disabled={Boolean(regeneratingId) || isSending}
-                              className="flex items-center gap-1 rounded px-2 py-0.5 text-slate-400 hover:bg-slate-100 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-slate-400 hover:bg-slate-100 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 transition"
                               title="Regenerate answer"
                             >
                               <RefreshCw className={`h-3 w-3 ${regeneratingId === message.id ? 'animate-spin' : ''}`} />
@@ -635,13 +637,13 @@ const ChatPage = () => {
                             <button
                               type="button"
                               onClick={() => handleCopyMessage(message.id, message.content)}
-                              className="flex items-center gap-1 rounded px-2 py-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                              className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
                               title="Copy response"
                             >
                               {copiedId === message.id ? (
                                 <>
                                   <Check className="h-3 w-3 text-emerald-500" />
-                                  <span className="text-emerald-500 font-medium">Copied</span>
+                                  <span className="text-emerald-500 font-semibold">Copied</span>
                                 </>
                               ) : (
                                 <>
@@ -656,7 +658,7 @@ const ChatPage = () => {
                     </div>
 
                     {isUser && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700 uppercase">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-xs font-bold text-white uppercase shadow-sm">
                         {user?.email ? user.email.slice(0, 2) : 'U'}
                       </div>
                     )}
@@ -670,10 +672,10 @@ const ChatPage = () => {
         </div>
 
         {/* Input Bar Section */}
-        <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-4 sm:px-8">
+        <div className="shrink-0 theme-header px-4 py-4 sm:px-8">
           <div className="mx-auto max-w-3xl">
             {error && (
-              <div className="mb-3 flex items-center justify-between rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-xs text-red-700">
+              <div className="mb-3 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs text-red-600">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{error}</span>
@@ -693,7 +695,7 @@ const ChatPage = () => {
                 e.preventDefault();
                 handleSendMessage();
               }}
-              className="relative flex items-end gap-2 rounded-2xl border border-slate-300 bg-white p-2 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100"
+              className="relative flex items-end gap-2 rounded-2xl theme-well p-2.5 transition-all duration-200 focus-within:ring-2 focus-within:ring-indigo-400/40"
             >
               {/* Paperclip quick attach */}
               <input
@@ -709,7 +711,7 @@ const ChatPage = () => {
               />
               <label
                 htmlFor="chat-file-input"
-                className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition"
+                className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100/60 hover:text-indigo-600 transition"
                 title="Attach document to this conversation"
               >
                 <Paperclip className="h-5 w-5" />
@@ -741,10 +743,10 @@ const ChatPage = () => {
                 type={isSending ? 'button' : 'submit'}
                 onClick={isSending ? handleStopGeneration : undefined}
                 disabled={!isSending && (!selectedConversation || !draft.trim())}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white transition ${
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white transition-all duration-200 ${
                   isSending
-                    ? 'bg-slate-700 hover:bg-slate-900'
-                    : 'bg-indigo-600 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400'
+                    ? 'bg-slate-700 hover:bg-slate-900 active:scale-95'
+                    : 'bg-indigo-600 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-400 active:scale-95'
                 }`}
                 aria-label={isSending ? 'Stop generating response' : 'Send message'}
                 title={isSending ? 'Stop generating response' : 'Send message'}
