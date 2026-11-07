@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 python-multipart
 pydantic
+PyJWT
 python-dotenv
 requests
 email-validator
@@ -13,8 +14,7 @@ sqlalchemy
 alembic
 psycopg[binary]
 pgvector
+pytest
 
 PyMuPDF
 python-docx
-faiss-cpu
-numpy
