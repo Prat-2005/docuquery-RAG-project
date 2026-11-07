@@ -209,19 +209,31 @@ Configure these settings in your `.env` file:
 | **Auth** | `POST` | `/auth/change-password` | Update account password |
 | **Auth** | `GET` | `/auth/settings` | Get user workspace and LLM settings |
 | **Auth** | `PATCH` | `/auth/settings` | Update user workspace and LLM settings |
+| **Auth** | `POST` | `/auth/logout` | Log out the current user |
+| **Auth** | `GET` | `/verify-auth-credentials` | Public email verification callback |
 | **Conversations** | `GET` | `/conversations` | List user conversations |
 | **Conversations** | `POST` | `/conversations` | Create a new conversation |
 | **Conversations** | `DELETE` | `/conversations/{id}` | Delete conversation and messages |
 | **Conversations** | `GET` | `/conversations/{id}/messages` | Get message history for a conversation |
 | **Conversations** | `POST` | `/conversations/{id}/messages` | Send message and generate AI response |
+| **Conversations** | `POST` | `/conversations/{id}/messages/{request_id}/stop` | Request cancellation of an active response |
+| **Conversations** | `POST` | `/conversations/{id}/generate` | Generate an answer from retrieved document context |
 | **Conversations** | `POST` | `/conversations/{id}/regenerate` | Regenerate response for last query |
 | **Conversations** | `POST` | `/conversations/{id}/retrieve` | Retrieve matching document chunks |
 | **Conversations** | `GET` | `/conversations/{id}/summary` | Generate / fetch summary for conversation documents |
 | **Documents** | `POST` | `/conversations/{id}/documents` | Upload and index document to conversation |
 | **Documents** | `GET` | `/conversations/{id}/documents` | List attached documents for conversation |
+| **Documents** | `POST` | `/conversations/{id}/documents/{document_id}` | Attach an existing document to a conversation |
 | **Documents** | `DELETE` | `/documents/{id}` | Remove document and vector embeddings |
+| **Documents** | `GET` | `/documents/{id}/summary` | Get document summary metadata |
+| **Test** | `GET` | `/test/` | Serve the frontend entry page |
 | **Test** | `GET` | `/test/health` | Service health status check |
 | **Test** | `GET` | `/test/db-test` | Verify PostgreSQL connection |
+
+All `/auth` routes except registration, login, password reset, email verification,
+and Google OAuth endpoints require a bearer JWT in the `Authorization` header.
+Conversation and document routes require an authenticated user and enforce
+ownership of the requested resources.
 
 ---
 
