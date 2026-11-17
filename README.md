@@ -110,7 +110,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 2. **Install backend dependencies:**
 
    ```powershell
-   pip install -r requirement.txt
+   pip install -r requirements.txt
    ```
 
 3. **Configure environment variables:**
@@ -278,7 +278,7 @@ docuquery-project/
 ├── migrations/                      # Alembic database migration scripts
 ├── sample_docs/                     # Sample PDF, DOCX, and TXT files for testing
 ├── alembic.ini                      # Alembic database migration configuration
-├── requirement.txt                  # Python backend dependencies
+├── requirements.txt                 # Python backend dependencies
 └── README.md                        # Project documentation
 ```
 
