@@ -58,4 +58,5 @@ def db_test():
     result = test_db_connection()
     return result
 
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+if os.path.exists("frontend"):
+    app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
