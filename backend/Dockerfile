@@ -27,8 +27,9 @@ COPY backend /app/backend
 COPY alembic.ini /app/alembic.ini
 COPY migrations /app/migrations
 
-# Create a non-root user and give ownership of the app directory
-RUN useradd --create-home --shell /bin/bash appuser && \
+# Create writable directories, create non-root user, and give ownership of /app
+RUN mkdir -p /app/.cache /app/uploads && \
+    useradd --create-home --shell /bin/bash appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
