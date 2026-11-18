@@ -159,6 +159,19 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 4. Open `http://localhost:5173` in your browser to use DocuQuery.
 
+## Docker Deployment
+
+Pre-built Docker images for both the backend and frontend are available on Docker Hub:
+* **Backend**: [`prat31s/docuquery-backend`](https://hub.docker.com/r/prat31s/docuquery-backend)
+* **Frontend**: [`prat31s/docuquery-frontend`](https://hub.docker.com/r/prat31s/docuquery-frontend)
+
+### Option 1: Full-Stack Deployment with Docker Compose (Recommended)
+
+1. **Configure environment variables:**
+   Copy `.env.example` to `.env` and populate your database, secret keys, and LLM configuration:
+   ```bash
+   cp .env.example .env
+
 ---
 
 ## Environment Variables
