@@ -240,12 +240,17 @@ class AIClient:
 
         return [embedding for embedding in embeddings if embedding is not None]
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, system_prompt: str | None = None) -> str:
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         response = self._request(
             "chat/completions",
             {
                 "model": self.config["model"],
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": messages,
                 "temperature": 0.2,
             },
             "Local generation request",
